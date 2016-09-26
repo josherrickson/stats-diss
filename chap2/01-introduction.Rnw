@@ -1,0 +1,50 @@
+When considering the effectiveness of a treatment or intervention, a goal of interest may be identifying those who would most benefit from the
+treatment or intervention, known as effect modification.\citep{rothman2008modern} One version of effect modification, subgroup analysis, separates the
+population into subgroups and estimates treatment effects for each. To be optimal, this assumes that the researcher knows and has access to the
+``correct'' sub-grouping variables.\citep{mak1988new} Alternatively, an unstructured subgroup detection method will lead to an inflated Type I error
+if corrected for multiplicity.\citep{lagakos2006challenge}
+
+One method to address subgroup analysis which has seen usage lately\citep{gine2012credit, dynarski2011experimental, goldrick-rab2011conditional}
+involves inverting the question of interest. Rather than looking for those who would most benefit from a treatment, we can instead ask whether an
+individual's predicted outcome in the absence of treatment is related to the strength of the treatment effect. In an ideal situation, it could be
+possible to show that those most at risk of a poor response benefit greatest from the treatment. For example, in a study of classroom performance, we
+might be able to claim that those students who are most at risk of failing (e.g. those with the poorest predicted grades in the absence of treatment)
+would show the most benefit from some alternative instruction method. Surely a result along these lines would be beneficial to an overburdened state
+government looking to target a treatment, or a budget-strapped administrator looking to cut costs by treating as few individuals as possible.
+
+The methodology being used to address whether those highest at risk are most benefitted by a treatment is a two-stage variation of the Peters-Belson
+method. In the first stage, the predicted response in the absence of treatment is modeled using only the control group. In the second stage, the
+sample is partitioned into quantiles based upon predicted response to control, and the treatment effect is estimated in each quantile, using the
+predicted response to control as an estimate for potential response of the treatment group to the control. Alternatively, the second stage can include
+an interaction between treatment and predicted response to control, representing the additional effect. This continuous interpretation admits an
+easier analysis by avoiding edge effects, and will be considered going forward.
+
+When performing this analysis, there are two choices to calculating the standard error for the interaction term, whether to account for the additional
+variation (i.e. the measurement error) in the first stage. Not accounting for the additional variation assumes all variables in the second stage
+regression model are measured without error. Taking a hint from instrumental variables literature \citep{wooldridge2010econometric}, we claim that it
+is necessary to account for the first stage variability to obtain proper coverage and Type I error rates.
+
+To estimate the standard error in the second stage, we use a sandwich estimator based on the estimating equations literature
+\citep{stefanski2002calculus, carroll1998sandwich}, which has been shown to account for the measurement error in the second stage plug-in
+values.\citep{murphy2002estimation} Although we find conventional Wald-type intervals not to maintain proper coverage, we find that coverage is much
+better maintained in an elaboration of the conventional procedure furnishing a confidence interval by explicitly inverting a family of hypothesis
+tests.
+
+To standardize nomenclature, we will call the general methodology a Peters-Belson method with Prognostic Heterogeneity, or PBPH method. We will refer
+to the implementation in existing literature as the uncorrected PBPH method, and our variation where we correct the standard error in the second stage
+due to the measurement error from the first stage as the corrected PBPH method. The corrected PBPH method could be described as a generalized score
+procedure\citep{boos1992generalized, guo2005small, rotnitzky1990hypothesis}.
+
+The structure of this chapter is as follows. We first review the literature surrounding the use of this method in Section \ref{p1:background}. The
+method originates from work by \citet{peters1941method} and \citet{belson1956technique}. Finally, we discuss two approaches in the existing literature
+to correct inference in this procedure; an in-sample computational approach \citep{abadie2013endogenous} and an out-of-sample first stage estimate
+\citep{hayward2006multivariable}.
+
+Following this, we describe in Section \ref{p1:motivation} more detail and present the results from \citet*{gine2012credit} which we use as our
+motivating example. We will use this paper to show how the method is used in literature, identify the issues we see in the method, and ultimately
+offer our corrected approach.
+
+After discussing the methodology that is needed in Section \ref{p1:methodology}, we present the corrected PBPH method that offers a proper level
+$\alpha$ hypothesis test and confidence interval in Section \ref{p1:calculations}. We show simulation results and re-examine the data from
+\citet{gine2012credit} in Section \ref{p1:simulations}. Finally, in Section \ref{p1:methodsummary} we give concise advice on implementation of our
+method.

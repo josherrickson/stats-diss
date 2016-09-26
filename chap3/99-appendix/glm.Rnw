@@ -1,0 +1,357 @@
+Assume that the responses \(Y\) share some distribution from the exponential family and
+\begin{align}
+  \E(Y_i) &= \mu_i\\
+  g(\mu_i) &= X\beta_c,
+\end{align}
+where \(X \in \R_{n\times p}\) is the design matrix, including a first constant column for an intercept, and \(g\) is some monotone and
+twice-differential canonical link function. For example, if \(Y\) is logistically distributed, \(g(t) = \log\left(\frac{t}{1-t}\right)\). If \(Y\) is
+Poisson then \(g(t) = \log(t)\).
+
+Let \(h(t) = g^{-1}(t)\) to simplify notation. Then the second stage is now
+\begin{equation}
+  Y - h(X\beta_c) = \tau + \eta h(X\beta_c).
+\end{equation}
+
+To define the estimating equations, we return to first principles. The estimating equation for the first stage model will be derived as the derivative
+of the log likelihood of \(\beta_c|Y_i\). All members of the exponential family can have their distribution described as
+\begin{align}
+  f(y_i|\beta_c) & = s(y_i)t(\beta_c)\exp\left[\sum_{k=1}^K a_k(y_i)b_k(\beta_c)\right]\\
+                 & = \exp\left[\left(\sum_{k=1}^K a_k(y_i)b_k(\beta_c)\right) + c(y_i) + d(\beta_c)\right],
+\end{align}
+where \(c(y_i) = \log s(y_i)\) and \(d(\beta_c) = \log t(\beta_c)\).\citep{dobson2008introduction}
+
+The corresponding log likelihood is
+\begin{equation}
+  l(\beta_c|y_i) = \left(\sum_{k=1}^K a_k(y_i)b_k(\beta_c)\right) + c(y_i) + d(\beta_c),
+\end{equation}
+and the first stage estimating equation is the derivative with respect to \(\beta_c\),
+\begin{equation}
+  \phi(Y_i;\beta_c) = \pderiv{\beta_c}l(\beta_c|y_i) = \left(\sum_{k=1}^K a_k(y_i)\left(\pderiv{\beta_c}b_k(\beta_c)\right)\right) +
+  \pderiv{\beta_c}d(\beta_c).
+\end{equation}
+
+The second stage, remaining linear, is similar to that developed in Section \ref{p1:calculation:s.e.correction:corrected},
+\begin{equation}
+  \psi_i(Y_i, \beta_c; \tau, \eta)  = \big(Y_i - h(X_i\beta_c) - \tau - \eta h(X_i\beta_c)\big)
+  \left(
+    \begin{array}{c}
+      1\\
+      h(X_i\beta_c)
+    \end{array}
+  \right).
+\end{equation}
+
+Estimators for the all parameters of interest, \((\beta_c, \tau, \eta)\), are solutions from
+\begin{align}
+  \left(\mathbf{0}\middle) = \middle(
+  \begin{array}{l}
+    \displaystyle \sum_{\{i:Z_i = 0\}} \phi_i(Y_i; \beta_c)\\
+    \displaystyle \sum_{\{i:Z_i = 1\}} \psi_i(Y_i, \beta_c; \tau, \eta)
+  \end{array}
+  \middle) = \middle(
+  \begin{array}{l}
+    \Phi(Y; \beta_c)\\
+    \\
+    \Psi(Y, \beta_c; \tau, \eta)
+  \end{array}
+  \right).
+\end{align}
+
+As with the linear version, we approach this derivation using a blocked matrix. The bread matrix has the form
+\begin{equation}
+  B(\beta_c, \tau, \eta) = \left[
+    \begin{array}{cc}
+      B_{11} & B_{12} \\
+      B_{21} & B_{22}
+    \end{array}
+  \right] = \left[
+    \begin{array}{cc}
+      \E \pderiv{\beta_c}\Phi(Y; \beta_c) & \E \pderiv{(\tau, \eta)}\Phi(Y;
+                                            \beta_c)\\
+      \E \pderiv{\beta_c}\Psi(Y, \beta_c; \tau, \eta) & \E \pderiv{(\tau,
+                                                        \eta)}\Psi(Y, \beta_c;
+                                                        \tau, \eta)\\
+    \end{array}
+  \right],
+\end{equation}
+where \(B_{11} \in \R_{p\times p}\), \(B_{12} \in \R_{p\times 2}\), \(B_{21} \in \R_{2\times p}\) and \(B_{22} \in \R_{2\times 2}\). To simplify
+notation, the submatrices and their estimates of the bread and meat are written succinctly. For example, \(B_{11}\) is shorthand for
+\(B_{11}(\beta_c, \tau, \eta)\) and \(\hat{B}_{11}\) is shorthand for \(B_{n_t,11}(\hat{\beta_c}, \hat{\tau}, \hat{\eta})\).
+
+\(B_{11}\) involves only the first stage, and is
+\begin{equation}
+  B_{11} = \E\sum_{\{i:Z_i = 0\}}\left[\left(\sum_{k=1}^K a_k(y_i) \left(\psecderiv{\beta_c}b_k(\beta_c)\right)\right) +
+    \psecderiv{\beta_c}d(\beta_c)\right].
+\end{equation}
+
+Since the first stage does not include \((\tau, \eta)\),
+\begin{equation}
+  B_{12} = \mathbf{0}.
+\end{equation}
+
+\(B_{21}\) is slightly more complicated, since \(\beta_c\) exists in both stages,
+\begin{equation}
+  B_{21} = \E \sum_{\{i:Z_i = 1\}} \left(
+    \begin{array}{c}
+      -(1 + \eta)\dot{h}(X_i\beta_c)\\
+      \big(Y_i - \tau - 2(1+\eta)h(X_i\beta_c)\big)\dot{h}(X_i\beta_c)
+    \end{array}
+  \right).
+\end{equation}
+
+Finally,
+\begin{equation}
+  B_{22} = \E \sum_{\{i:Z_i = 1\}} \left[
+    \begin{array}{cc}
+      1 & h(X_i\beta_c)\\
+      h(X_i\beta_c) & h(X_i\beta_c)^2
+    \end{array}
+  \right].
+\end{equation}
+
+The meat matrix \(M^{(c)}(\beta_c, \tau, \eta)\) will be similarly blocked. The diagonal blocks, \(M_{11}\) and \(M_{22}\), will be the variance of
+\(\Phi\) and \(\Psi\) respectively. The off-diagonal blocks remain 0 as in the linear case, see Section
+\ref{p1:calculation:s.e.correction:corrected}.
+
+\(M_{11}\), being the variance of \(\Phi\), is simply
+\begin{equation}
+  M_{11} = \var \left[\sum_{\{i:Z_i = 0\}} \left(\sum_{k=1}^K a_k(y_i)\left(\pderiv{\beta_c}b_k(\beta_c)\right)\right) +
+    \pderiv{\beta_c}d(\beta_c)\right].
+\end{equation}
+
+The bottom right piece involves all three parameters of interest
+\begin{equation}
+  M_{22} = \var \left[\sum_{\{i:Z_i = 1\}} \big(Y_i - h(X_i\beta_c) - \tau -
+  \eta h(X_i\beta_c)\big)
+  \left(
+    \begin{array}{c}
+      1\\
+      h(X_i\beta_c)
+    \end{array}
+  \right)\right].
+\end{equation}
+
+Simplifying the meat without specifying the link function is quite difficult; we leave that task to after specifying a distribution for \(Y\).
+
+The covariance of \((\tau, \eta)\) is the lower right \(2\times 2\) sub-matrix of
+\begin{equation}
+  B_{n_t}^{(c)}(\hat{\beta_c}, \hat{\tau}, \hat{\eta})^{-1}M_{n_t}^{(c)}(\hat{\beta_c}, \hat{\tau}, \hat{\eta})B_{n_t}^{(c)}(\hat{\beta_c},
+  \hat{\tau}, \hat{\eta})^{-T}.
+\end{equation}
+
+After some tedious but simple algebra, we arrive at
+\begin{equation}
+  \var\big(\tau, \eta\big) = B_{22}^{-1}\left(M_{22} + B_{21}B_{11}^{-1}M_{11}B_{11}^{-T}B_{21}^T \right)B_{22}^{-T}.
+  \label{p2:eq:gen-correctedest}
+\end{equation}
+
+\subsection{Example: Ordinary Linear Model}
+\label{p2:glm:ols}
+
+When \(Y|\beta_c\) is normal, the first stage model is the normal linear model. Therefore we can confirm the results in Chapter \ref{chap2}. In this
+setting, \(g\) is the identity function (and similarly \(h\)), therefore, \(Y|\beta_c\) has mean \(X\beta_c\) and variance \(\sigma^2\), though we
+consider \(\sigma^2\) a nuisance parameter.
+
+We have that
+\begin{align}
+  f(y_i|\beta_c) & \propto \exp\left(-\frac{(y_i -
+                   x_i\beta_c)^2}{2\sigma^2}\right)\\
+                 & \propto \exp\left(-\frac{y_i^2}{2\sigma^2} +
+                   \frac{y_ix_i\beta_c}{\sigma^2} -
+                   \frac{(x_i\beta_c)^2}{\sigma^2}\right),
+\end{align}
+so that \(k=1\) and \(a_1(y_i) = y_i\), \(b_1(\beta_c) = \frac{x_i\beta_c}{\sigma^2}\), and \(c(y_i) = -\frac{y_i^2}{2\sigma^2}\) and
+\(d(\beta_c) = -\frac{(x_i\beta_c)^2}{\sigma^2}\).
+
+The first stage estimating equation is therefore
+\begin{equation}
+  \phi(Y_i;\beta_c) = Y_i\frac{X_i}{\sigma^2} - \frac{(X_i\beta_c)X_i}{\sigma^2} = (Y_i - X_i\beta_c)X_i.
+\end{equation}
+
+The second equality holds due to the estimating equation equaling 0. The second stage is clearly
+\begin{equation}
+  \psi_i(Y_i, \beta_c; \tau, \eta)  = \big(Y_i - X_i\beta_c - \tau -
+  \eta X_i\beta_c\big)
+  \left(
+    \begin{array}{c}
+      1\\
+      X_i\beta_c
+    \end{array}
+  \right),
+\end{equation}
+agreeing with the results in Section \ref{p1:calculation:s.e.correction:corrected}.
+
+\subsection{Example: Logistic Regression}
+\label{p2:glm:logistic}
+
+Let \(Y_i|\beta_C\) be distributed as a Bernoulli trial with success probability \(\rho_i\) where
+\begin{equation}
+  \rho_i = \frac{1}{1+\exp(-X_i\beta_c)}.
+  \label{p2:eq:glmcalc-log-prob}
+\end{equation}
+
+The link function \(g\) is logit, so that its inverse is
+\begin{equation}
+  h(X_i\beta_c) = \frac{1}{1+\exp(-X_i\beta_c)} = \logit^{-1}(X_i\beta_c).
+\end{equation}
+
+Therefore we have
+\begin{align}
+  f(y_i|\beta_c) & = \rho_i^{y_i}(1-\rho_i)^{1-y_i}\\
+  & = \exp\left(y_i\log\left(\frac{\rho_i}{1-\rho_i}\right) + \log(1-\rho_i)\right),
+\end{align}
+with \(k=1\), \(a_1(y_i) = y_i\), \(b_1(\rho_i) = \log\left(\frac{\rho_i}{1-\rho_i}\right)\), \(c(y_i) = 0\) and \(d(\rho_i) =
+\log(1-\rho_i)\). Substituting (\ref{p2:eq:glmcalc-log-prob}) into \(b_1\) and \(d\), we get that \(b_1(\beta_c) = X_i\beta_c\) and
+\(d(\beta_c) = \log\left(\frac{1}{1 + \exp(X_i\beta)}\right)\).
+
+The corresponding first stage estimating equation is
+\begin{align}
+  \phi(Y_i;\beta_c) & = -Y_iX_i + \logit^{-1}(X_i\beta_c)X_i\\
+                    & = \left(Y_i - \logit^{-1}(X_i\beta_c)\right)X_i,
+\end{align}
+where the sign switch is due to \(\phi(Y_i;\beta_c) = 0\), and the second stage estimating equation is
+\begin{equation}
+  \begin{split}
+    \psi_i(Y_i, &\beta_c; \tau, \eta) = \\
+    &\left(Y_i - \logit^{-1}(X_i\beta_c) - \tau - \eta\logit^{-1}(-X_i\beta_c)\right) \left(
+      \begin{array}{c}
+        1\\
+        \logit^{-1}(-X_i\beta_c)
+      \end{array}
+  \right)
+  \end{split}
+\end{equation}
+
+Looking at the bread and meat, we see some complications. First, \(B_{11}\) is no longer independent of \(\beta_c\),
+\begin{equation}
+  B_{11} = \E\sum_{\{i:Z_i = 0\}} X_iX_i' \frac{\exp(X_i\beta_c)}{(1 + \exp(X_i\beta_c))^2}.
+\end{equation}
+
+Note that the fraction is scalar, while \(X_iX_i'\) is \(p\times p\).
+
+For the off-diagonals, \(B_{12}\) is still 0, and
+\begin{equation}
+  \begin{split}
+    B_{21}& = \\
+    &\E \sum_{\{i:Z_i = 1\}} \left(
+      \begin{array}{c}
+        -(1 + \eta)X_i\\
+        \left(Y_i - \tau - 2(1+\eta) \logit^{-1}(-X_i\beta_c)\right)X_i
+      \end{array}
+    \right)\frac{\exp(X_i\beta_c)}{(1 + \exp(X_i\beta_c))^2}.
+  \end{split}
+\end{equation}
+
+Both \(B_{11}\) and \(B_{21}\) have scaling terms of the same form, but are summed over the control and treatment groups respectively.
+
+Finally, \(B_{22}\) is straightforward,
+\begin{equation}
+  B_{22} = \E \sum_{\{i:Z_i = 1\}} \left[
+    \begin{array}{cc}
+      1 & \logit^{-1}(X_i\beta_c)\\
+      \logit^{-1}(X_i\beta_c) & \left(\logit^{-1}(X_i\beta_c)\right)^2
+    \end{array}
+  \right].
+\end{equation}
+
+Moving to the meat, we have that
+\begin{equation}
+  M_{11} = \sum_{\{i:Z_i=0\}} \var\left(Y_i - \logit^{-1}(-X_i\beta_c)\right)X_iX_i',
+\end{equation}
+and
+\begin{equation}
+  \begin{split}
+    M_{22}& =\\
+    &\sum_{\{i:Z_i=1\}} \var\left[\left(Y_i - \logit^{-1}(-X_i\beta_c) - \tau - \eta\logit^{-1}(-X_i\beta_c)\right)
+      \left(
+        \begin{array}{c}
+          1\\
+          \logit^{-1}(-X_i\beta_c)
+        \end{array}
+      \right)\right].
+  \end{split}
+\end{equation}
+
+Since \(Y_c = \logit^{-1}(-X_i\beta_c)\), both pieces of the meat and \(B_{22}\) have forms that are similar to the linear case. However, the other
+two pieces of the bread have the additional multiplicative term, \(\frac{\exp(X_i\beta_c)}{(1 + \exp(X_i\beta_c))^2}\). This is simply the variance,
+so can be represented by \(\rho_i(1 - \rho_i)\) to ease computation.
+
+\subsection{Example: Poisson Regression}
+\label{p2:glm:poisson}
+
+Next, let \(Y_i|\beta_C\) be Poisson with expected value \(\lambda_i\) where
+\begin{equation}
+  \lambda_i = e^{X_i\beta_c}.
+  \label{p2:eq:glmcalc-pois-prob}
+\end{equation}
+
+The link function is a log, so its inverse is
+\begin{equation}
+  h(\mu_i) = e^{X_i\beta_c}.
+\end{equation}
+
+We have
+\begin{align}
+  f(y_i|\beta_c) & = e^{Y_iX_i\beta_c}e^{-e^{_i\beta_c}}Y!^{-1}\\
+                 & = \exp\left(Y_iX_i\beta_c - e^{X_i\beta_c} - \log Y!\right),
+\end{align}
+with \(k=1\), \(a_1(Y_i) = Y_i\), \(b_1(\beta_c) = X_i\beta_c\), \(c(Y_i) = -\log Y!\) and \(d(\beta_c) = -\exp(X_i\beta_c)\)
+
+The estimating equations are
+\begin{align}
+  \phi(Y_i;\beta_c) & = Y_iX_i - X_ie^{X_i\beta_c}\\
+    & = (Y_i - e^{X_i\beta_c})X_i,
+\end{align}
+and
+\begin{equation}
+  \psi_i(Y_i, \beta_c; \tau, \eta)  = \left(Y_i -
+    e^{X_i\beta_c} - \tau - \eta e^{X_i\beta_c}\right)
+  \left(
+    \begin{array}{c}
+      1\\
+      e^{X_i\beta_c}
+    \end{array}
+  \right).
+\end{equation}
+
+\(B_{11}\) is still no longer independent of \(\beta_c\),
+\begin{equation}
+  B_{11} = \E\sum_{\{i:Z_i = 0\}} X_iX_i'e^{X_i\beta_c}.
+\end{equation}
+
+\(B_{12}\) is still 0, and
+\begin{equation}
+  B_{21} = \E \sum_{\{i:Z_i = 1\}} \left(
+    \begin{array}{c}
+      -(1 + \eta)X_i\\
+      \left(Y_i - \tau - 2(1+\eta)e^{X_i\beta_c})\right)X_i
+    \end{array}
+  \right)e^{X_i\beta_c},
+\end{equation}
+and
+\begin{equation}
+  B_{22} = \E \sum_{\{i:Z_i = 1\}} \left[
+    \begin{array}{cc}
+      1 & e^{X_i\beta_c}\\
+      e^{X_i\beta_c} & (e^{X_i\beta_c})^2
+    \end{array}
+  \right].
+\end{equation}
+
+The meat diagonals are
+\begin{equation}
+  M_{11} = \sum_{\{i:Z_i = 0\}} \var\left(Y_i - e^{X_i\beta_c}\right)X_iX_i',
+\end{equation}
+and
+\begin{equation}
+  M_{22} = \sum_{\{i:Z_i = 1\}} \var\left[\left(Y_i - e^{X_i\beta_c} - \tau - \eta e^{X_i\beta_c}\right)
+    \left(
+    \begin{array}{c}
+      1\\
+      e^{X_i\beta_c}
+    \end{array}
+  \right)\right].
+\end{equation}
+
+As with the logistic case, we have a result similar in form to the linear case, with an additional component on \(B_{11}\) and \(B_{12}\),
+\(e^{X_i\beta_c}\) which is the variance, \(\lambda_i\).

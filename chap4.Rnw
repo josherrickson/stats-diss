@@ -1,0 +1,29 @@
+\section{Introduction}
+\label{p3:introduction}
+<<child='chap4/01-introduction.Rnw'>>=
+@
+
+\section{Linear vs Logistic}
+\label{p3:linearvslog}
+<<child='chap4/02-linearlogistic.Rnw'>>=
+@
+
+\section{Simulations}
+\label{p3:simulations}
+<<child='chap4/03-simulations.Rnw'>>=
+@
+
+\section{Linear vs Logistic, with Stratification}
+\label{p3:strata}
+<<child='chap4/04-strata.Rnw'>>=
+@
+
+\section{Applied Example}
+\label{p3:gurm}
+<<child='chap4/05-gurm.Rnw'>>=
+@
+
+\section{Conclusion}
+\label{p3:conclusion}
+<<child='chap4/06-conclusion.Rnw'>>=
+@

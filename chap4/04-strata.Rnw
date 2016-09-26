@@ -1,0 +1,236 @@
+\subsection{Conditional Logistic Regression}
+\label{p3:strata:clr}
+
+Conditional logistic regression is a modification to logistic regression which enables controlling for parameters in the model without needing to
+estimate coefficients for them. The likelihood is evaluated conditional on realized values of sufficient statistics corresponding to these
+unwanted parameters, and the resulting quasi-likelihood function is then maximized to find estimates for the remaining parameters.
+
+Let our response be \(Y \in \{0, 1\}_n\). Let \(X \in \R_{n\times p}\) be a set of predictors including a constant column for the intercept, and let
+\(U \in \R_{n\times q}\) be a set of unwanted predictors that need to still be controlled for. These \(U\) can generally be any set of predictors, but
+in this context we will consider them to be fixed effects for strata or matched sets. The logistic model would be
+\begin{equation}
+  \logit\big(\E(Y | X, U)\big) = X\beta + U\gamma,
+\end{equation}
+with \(\beta \in R_p\) and \(\gamma \in R_q\).
+
+If \(n >> p + q\), this model is sufficient; and we can maximize the likelihood of \((\beta, \gamma)\) to obtain \((\hat{\beta}, \hat{\gamma})\).
+
+However, if \(q\) is large, we run into issues. If \(n \leq p + q\), the model is under-specified. In general, as \(p + q\) increases relative to
+\(n\), the performance of the maximum likelihood solution is poor.\citep[Ch. 6]{agresti2002categorical}
+
+If \(\gamma\) is not of interest, we can condition the likelihood of \((\beta, \gamma)\) on the sufficient statistics for \(U\). The conditional
+likelihood lacks dependence on \(\gamma\), but can otherwise be maximized in the same fashion to obtain \(\hat{\beta}'\). See
+\citet{agresti2002categorical} or \citet{hosmer2000applied}, amongst others, for a fuller discussion of conditional logistic models.
+
+\subsection{Evidence for Linear in Probability}
+\label{p3:strata:twoclr}
+
+The model for a conditional logistic regression approach where matched sets provide the strata can be expressed by
+\begin{equation}
+  \logit \big(\E(Y | X, Z, C)\big) = X\beta + Z\tau + C\gamma,
+  \label{p3:eq:clrnew_mult}
+\end{equation}
+where \(Y\) is a binary response, \(X\) is some design matrix of dimension \(n\times p\) including a column of 1's for the intercept, \(C\) is the set
+of indicators for strata membership and \(Z\) is treatment status. As described in the previous section, by conditioning on the sufficient statistics
+for the strata membership, we obtain estimates for \((\beta, \tau)\) without estimating \(\gamma\).
+
+In this setting, the effect of \(Z\) is linear only in the logit scale, and multiplicative in the probability scale. To visualize this, consider
+Figure \ref{p3:graph:invlogit}, which plots the relationship between \(\theta\) and its inverse logit, \(F(\theta)\). If \(\theta\) is near 0, an
+increase of 1 on the logit scale is equivalent to a shift about \Sexpr{round(arm::invlogit(1) - arm::invlogit(0),2)}. If \(\theta\) is near 3, an
+increase of 1 on the logit scale is equivalent to only a shift of about \Sexpr{round(arm::invlogit(4) - arm::invlogit(3), 2)}.
+
+<<echo=FALSE, fig.width=3, fig.height=3, fig.align="center", fig.cap="$F$ is the inverse logit function.\\label{p3:graph:invlogit}">>=
+plot(function(x) arm::invlogit(x), -6, 6, xlab=expression(theta), ylab=expression(F(theta)), xaxt='n', yaxt='n')
+axis(1, at=c(-6,-3,0,3,6))
+axis(2, at=c(0, .25, .5, .75, 1), labels=c("0.0", "", "0.5", "", "1.0"))
+@
+
+If the treatment effect is multiplicative in the probability scale (additive on the logit scale), then this is acceptable. However, we may ask whether
+the treatment effect may be additive on the probability scale. To attempt to gain some evidence towards this end, we begin with conditional logistic
+model, under the assumption that researchers faced with stratified data and binary response will be very likely to use it for their first analysis.
+
+Let \(\bar{Y}_s\) be the average response (or proportion of 1 responses) in strata \(s\). \(\bar{Y}_s\) is a natural estimate of
+\(\mathbb{P}(Y = 1 | S = s)\). We have that \(F'(\theta) = F(\theta)\left(1 - F(\theta)\right)\). For observation \(i\) in strata \(s\), let
+\begin{equation}
+  \lambda_{is}= 1/\left(\bar{Y}_s(1 - \bar{Y}_s)\right),
+  \label{p3:eq:lambda}
+\end{equation}
+so that \(\lambda_{is}\) decreases as \(\bar{Y}_s\) moves towards .5. Multiplying \(Z\) with \(\lambda\) up-weights the treatment effect in strata
+with \(\bar{Y}_s\) closer to 0 or 1, roughly rendering the effect from linear on the logit scale to linear on the probability scale. (Note that
+\(\lambda_{is} = \lambda_{jt}\) if \(s = t\), e.g. that \(i\) and \(j\) belong to the same strata.) Let \(\lambda_{is}\) = 0 if
+\(\bar{Y}_s \in \{0,1\}\) as these strata offer no within strata information.  We define a new conditional logistic model,
+\begin{equation}
+  \logit\big(\E(Y | X, Z\lambda, C)\big) = X\beta + (Z \lambda)\tau' + C\gamma.
+  \label{p3:eq:clrnew_linear}
+\end{equation}
+
+However, we have entered circular logic, as \(\bar{Y}_s\) is what we are trying to avoid estimating by using conditional logistic regression. Because
+we are assuming the strata are created via matched samples (as opposed to another common use of strata, with a stratifying variable such as gender),
+the number of strata increases with the sample size, so we gain no further information about any individual \(\bar{Y}_s\) as the sample size
+increases.
+
+If instead of conditional logistic regression, we used two logistic stages, we could introduce the \((Z \lambda)\) term and compare. Assume for the
+moment that no adjustment for the strata were required (we will relax this assumption in the following section).
+
+We fit a first stage on only the control group members where \(Z_i\) = 0 of
+\begin{equation}
+  \logit\big(\E(Y_c | X)\big) = X\beta,
+\end{equation}
+and then two different second stage models on the entire data set, after getting the predicted response in the absence of treatment on the logit
+scale, \(\logit(\hat{Y}_c)\),
+\begin{align}
+  \logit\big(\E(Y | Z, \hat{Y}_c)\big) & = Z \tau + \logit(\hat{Y}_c),\label{p3:eq:testmult}\\
+  \logit\big(\E(Y | Z\lambda, \hat{Y}_c)\big) & = (Z \lambda) \tau + \logit(\hat{Y}_c).\label{p3:eq:testlinear}
+\end{align}
+
+Note that there is no coefficient on the predicted response in the absence of treatment, which we will refer to as an offset.
+
+The treatment effect is up-weighted as \(\bar{Y}_s\) moves away from .5. Therefore, equal increases on the probability scale will be more closely
+equivalent on the logit scale as well. If (\ref{p3:eq:testmult}) outperform (\ref{p3:eq:testlinear}) in some sense (for example, minimizing the risk
+function associated with logistic loss as discussed in Section \ref{p3:simulations:results}), then this is evidence that the treatment effect is
+linear on the logit scale, and the conditional logistic model is sufficient.
+
+On the other hand, if (\ref{p3:eq:testlinear}) outperforms (\ref{p3:eq:testmult}), then the treatment effect may be linear on the probability scale,
+and our two-stage approach can address that.
+
+\subsection{Modeling Linear Treatment Effect with Stratification}
+\label{p3:strata:weights}
+
+If, after following the recommendation in the previous section, there is evidence that the treatment effect is linear on the probability scale, we can
+examine the treatment effect more precisely using a linear second stage model. The first stage remains logistic, as it would be preferable to model
+the relationship between the binary response and the predictors \(X\) on the logit scale, regardless of the effect of treatment.
+
+In the first model, as we have been doing, we fit
+\begin{equation}
+  \logit\big(\E(Y_c | X)\big) = X \beta
+  \label{p3:eq:ipwstage1model}
+\end{equation}
+amongst the control group only where \(Z_i = 0\), to predict response in the absence of treatment. The second stage model is now linear, using the
+predicted values \(\hat{Y}_c = \logit^{-1}\left(\hat{\beta}X\right)\) as an offset.
+\begin{equation}
+  \E\left(Y \middle| Z, \hat{Y}_c\right) = Z\tau + \hat{Y}_c.
+  \label{p3:eq:ipwstage2model}
+\end{equation}
+
+\(\tau\) is the estimated effect of treatment on the probability scale.
+
+We now consider adjustments to the model to account for the stratification. To start, we can include fixed strata effects,
+\begin{equation}
+  \E\left(Y \middle| Z, S, \hat{Y}_c\right) = Z\tau_f + S\kappa_f + \hat{Y}_c,
+  \label{p3:eq:fixedeffects}
+\end{equation}
+where \(S\) is a matrix of indicators of strata membership. This is a very straightforward model to fit, and enables discussion of strata level
+effects.
+
+As an alternative, consider weighting. Let \(S_i\) be the strata membership of observation \(i\). Define \(\delta\),
+\begin{equation}
+  \delta_i = \begin{cases}
+    \frac{\sum_{j: S_j = S_i} Z_j}{\sum_{j: S_j = S_i} 1}, & Z_i = 1,\\
+    \frac{\sum_{j: S_j = S_i} (1 - Z_j)}{\sum_{j: S_j = S_i} 1}, & Z_i = 0.
+  \end{cases}
+\end{equation}
+
+That is, \(\delta_i\) is the proportion of observations in the strata which observation \(i\) belongs to which have the same treatment status. Note
+that if observations \(i\) and \(j\) have \(S_i = S_j\) and \(Z_i = Z_j\), then \(\delta_i\) = \(\delta_j\). When strata are sets created via
+matching, \citet{rosenbaum2010design} argues that the unconditional probability of \(Z_i = 1\) within strata is constant, and extends this to the
+probability conditional on the size and structure of the matches, a claim which requires strong ignorability.\citep{rosenbaum2010design}
+
+In other words, \(\delta_i\) is an estimate for the probability that an observation was assigned to treatment status \(Z_i\) in strata \(S_i\).
+
+Now, let \(w_i = \delta_i^{-1}/\sum_j \delta_j^{-1}\) be the normalized inverse and treated as weights, then (\ref{p3:eq:ipwstage2model}) (adding a
+subscript of \(w\) to \(\tau\) to distinguish) becomes a weighted least square model. The estimate for \(\tau_w\) is a Hajek-style estimate of the
+treatment effect (see Appendix \ref{p3:appendix:coefs} for derivation),
+\begin{equation}
+  \hat{\tau}_w = \frac{\sum_i w_iZ_i(Y_i - Y_{ci})}{\sum_i w_iZ_i}.
+\end{equation}
+
+In a true Hajek-style estimate, \(w_i\) would represent estimated probability of inclusion in the sample.\citep{basu2011essay}
+
+If the effect of treatment is constant across strata, then \(\hat{\tau}_f\) and \(\hat{\tau}_w\) are both estimates of that constant treatment
+effect. However, if the treatment effect is not constant across strata, then \(\hat{\tau}_f\) from the fixed effects model will instead of estimating
+some weighted average of the strata-specific treatment effects. A benefit of the weighted approach is that \(\hat{\tau}_w\) remains a consistent
+estimate of an average treatment effect regardless of whether the treatment effect is constant.
+
+As is common in two-stage least squares procedures, special consideration must be given to standard error attached to \(\hat{\tau}_w\). If the two
+stage least squares is done manually, the standard error associated with the second stage which utilizes traditional one-stage fitting procedures with
+\(\hat{Y}_c\) in place of \(Y_c\) will be negatively biased, as they do not consider the measurement error on \(\hat{Y}_c\) introduced by the first
+stage.\citep{wooldridge2010econometric} This can be addressed with sandwich estimators.
+
+We can reframe (\ref{p3:eq:ipwstage2model}) slightly to ease calculations. Since we are estimating the effect of the treatment on the treated, we can
+restrict our attention to the cases where \(Z_i = 1\). Then (\ref{p3:eq:ipwstage2model}) simplifies to
+\begin{equation}
+  \E\left(Y \middle| \hat{Y}_c\right) = \tau_w + \hat{Y}_c.
+  \label{p3:eq:ipwstage2model_zonly}
+\end{equation}
+
+The \(\tau_w\) from this this model has the same value and interpretation as \(\tau_w\) from (\ref{p3:eq:ipwstage2model}). By default, the standard
+error associated with it will differ, but in either case we will use sandwich estimators to correctly compute it.
+
+Following the derivation in Appendix \ref{p3:appendix:ee_wls} and replacing \(Y_c\) with \(\logit^{-1}(X\beta_c)\), the second stage model has
+estimating equations
+\begin{equation}
+  \psi(Y_i, \beta_c; \tau_w) = w_i(Y_i - \logit^{-1}(X_i\beta_c) - \tau_w).
+\end{equation}
+
+Following the derivations in Appendix \ref{p2:glm:logistic}, we have that the bread are defined as
+\begin{equation}
+  B_{11} = \E\sum_{i:Z_i = 0} X_iX_i' \frac{\exp(X_i\beta_c)}{(1 + \exp(X_i\beta_c))^2},
+\end{equation}
+
+\begin{equation}
+  B_{12} = 0,
+\end{equation}
+
+\begin{equation}
+  B_{21} = \E\sum_{i:Z_i = 1} w_iX_i'\frac{\exp(X_i\beta_c)}{(1 + \exp(X_i\beta_c))^2},
+\end{equation}
+and
+\begin{equation}
+  B_{22} = \E\sum_{i:Z_i = 1} w_i = \frac{1}{2}.
+\end{equation}
+
+To see why \(B_{22}\) simplifies, let \(n_s\) be the number of observations and \(n_{zs}\) be the number of treated members in strata \(s\). We can
+rewrite \(\delta_i\) as \(n_{zs}/n_s\) and \((1-n_{zs})/n_s\) (for observation \(i\) in strata \(s\)) when \(Z_i\) = 1 and 0 respectively. If we
+consider \(\delta^{-1}\) and sum over all treated members, each strata will contribute \(n_{zs}\) identical additive components, so that
+\(\sum_{i:Z_i = 1} \delta^{-1} = \sum_s \frac{n_s}{n_{zs}}n_{zs} = n\). A similar calculation when summing over control members yields
+\(\sum_{i:Z_i = 0} \delta^{-1} = n\). Hence the sums of \(w\) over control and treatment are identical (and sum to 1 by definition).
+
+The meat is
+\begin{equation}
+  M_{11} = \sum_{i:Z_i = 0} \var\left(Y_i - \logit^{-1}(-X_i\beta_c)\right)X_iX_i'
+\end{equation}
+which is estimated by
+\begin{equation}
+  \hat{M}_{11} = \sum_{i:Z_i = 0} \left(Y_i - \logit^{-1}(-X_i\beta_c)\right)^2X_iX_i',
+\end{equation}
+and
+\begin{equation}
+  M_{22} = \sum_{i:Z_i = 1} \var\left(w_i\left(Y_i - \logit^{-1}(X_i\beta_c) - \tau_w\right)\right)
+\end{equation}
+estimated by
+\begin{equation}
+  \hat{M}_{22} = \sum_{i:Z_i = 1} w_i^2\left(Y_i - \logit^{-1}(X_i\beta_c) - \tau_w\right)^2.
+\end{equation}
+
+To see why \(\hat{M}_{22}\) drops the expectation squared, note that in weighted least squares, the expected value of weights times residuals is
+zero. We obtain a final estimate of
+\begin{equation}
+  \hat{\sigma}^2_{\textrm{wls}} = 4\left(\hat{M}_{22} + \hat{B}_{21} \hat{B}_{11}^{-1} \hat{M}_{11} \hat{B}_{11}^{-T}\hat{B}_{21}^T\right).
+  \label{p3:eq:strata:se}
+\end{equation}
+
+\subsection{Ignoring the Decision Criterion}
+\label{p3:strata:prop}
+
+There are situations where the choice of a linear or logistic model may be based upon desired properties of the treatment effect estimate rather than
+the decision criterion we describe in Section \ref{p3:strata:twoclr}.
+
+When the second stage is a linear model, the coefficient on treatment status \(Z\) is a consistent estimate of the average treatment effect, and if
+the second stage is weighted (as we recommend in Section \ref{p3:strata:weights}), then it is a consistent estimate of the weighted average treatment
+effect.\citep{angrist1995two} This holds regardless of whether the treatment effects are linear on the probability scale. This same property does not
+hold for the logistic second stage model.
+
+On the other hand, if the second stage is logistic, we can benefit from the reversibility of an odds ratio. If, for example, data are collected from a
+case-control study, disease rates given exposure cannot be estimated. However, since we do obtain estimates of exposure given disease rates, and the
+odds ratios for those two conditional odds are equivalent.\citep[Ch. 2]{schlesselman1982case} A similar property does not exist for a linear second
+stage model.

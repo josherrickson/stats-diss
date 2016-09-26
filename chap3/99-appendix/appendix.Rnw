@@ -1,0 +1,9 @@
+\section{Derivation of Sandwich Components with GLM First Stage}
+\label{p2:glm}
+<<child='glm.Rnw'>>=
+@
+
+\section{Derivation of Sandwich Components for Clustered Data}
+\label{p2:clusters}
+<<child='clusters.Rnw'>>=
+@

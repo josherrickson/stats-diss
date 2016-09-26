@@ -1,0 +1,14 @@
+We demonstrate the implementation of the PBPH methodology by introducing the \texttt{pbph} package. The package enables users to easily fit the second
+stage model which will correct the standard error to account for the two-stage modeling setting.
+
+Following this, we demonstrated two embellishments on the methodology which the working statistician may encounter. First, we generalize the method to
+account for non-normal residuals by allowing the first stage model to be a generalized linear model, for example logistic regression for binary
+data. Additionally, we allow the analysis of data generated via clustered random trials, by correctly computing the standard errors accounting for the
+clusters.
+
+Simulations allowed the exploration of nuances of these methods. We showed the restrictions on the coefficients that exist with a logistic first
+stage, as well as discussed some heuristics for the sample sizes needed to obtain adequate coverage with clustered data. Finally, we showed the
+implementation of both these embellishments on \citet{gine2012credit}.
+
+Together, these enhancements to the PBPH methodology offer a nice set of flexibility to the working statistician which shows the strength of our
+methodology, though of course, further enhancements are possible.

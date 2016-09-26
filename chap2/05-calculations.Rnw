@@ -1,0 +1,439 @@
+Now that we have shown the issues in the PBPH method, and that the issues stem from an uncorrected standard error estimate, it remains to derive the
+corrected estimate. We will more rigorously define the problem before the derivation. Following that, we will examine how to perform hypothesis test
+and create confidence intervals.
+
+\subsection{Problem Definition}
+\label{p1:calculations:problem}
+
+We first define the PBPH method rigorously.
+
+Consider some data \(X\) of dimension \(n \times p\) including a column of \(1\)'s for the intercept, and a response \(Y\). Let \(Z\) indicate group
+membership; call \(\{i : Z_i = 0\}\) the control group and likewise call \(\{i : Z_i = 1\}\) the treatment group. Let \(\sum_{i=1}^n Z_i = n_t\) and
+\(\sum_{i=1}^n (1 - Z_i) = n_c\), with \(n = n_c + n_t\).
+
+In the first stage, we need a model fitted to predict the outcomes amongst only the control group. We derive this using a linear least squares model,
+but in principle, any model which can be used for prediction should suffice.
+
+Within only the control group, fit
+\begin{equation}
+  Y = X\beta_c + \delta,
+  \label{p1:eq:stage1}
+\end{equation}
+where \(\delta\) is the error term. The subscript \(c\) on the \(\beta_c\) coefficient is to remind that only the control group is used to generate
+it.
+
+From the data, we obtain \(\hat{\beta}_c\) as an estimator for \(\beta_c\), and in turn, can obtain \(\hat{Y}_{ic} = X_i'\hat{\beta}_c\),
+interpretable as an estimated potential response of observation \(i\) to the control. In the control group, \(Y_i = Y_{ic}\), meaning the observed
+response is equivalent to the potential response to control, and thus \(Y_i - \hat{Y}_{ic}\) is a residual. However, in the treatment group
+\(Y_i = Y_{it}\) and therefore \(Y_i - \hat{Y}_{ic}\) may be interpreted as an estimated treatment effect on individual \(i\). The methodology
+suggested in \citet{peters1941method} and \citet{belson1956technique} uses \(n_t^{-1} \sum_{n_t} (Y_i - \hat{Y}_{ic}), \{i : Z_i = 1\}\) to estimate
+the treatment effect. That methodology assumes a homogeneous treatment effect.
+
+To enable a heterogeneous treatment effect, introduce a second stage. To begin, we will utilize the full sample. The goal is to be able to make some
+statement speaking to the variation in the treatment effect with regards to the predicted response in the absence of any treatment. The right-hand
+side will be the observed response less the predicted response in the absence of treatment, \(X\beta_c\). We will refer to this subtracted quantity as
+an offset. On the right-hand side, we have both the main treatment effect as well as the additional effect due to the predicted response in the
+absence of treatment. This model can be expressed as
+\begin{equation}
+  Y - X\beta_c = Z\tau + (ZX\beta_c)\eta + \epsilon.
+  \label{p1:eq:fullmodel1}
+\end{equation}
+\(Y = Y_tZ + Y_c(1-Z)\) and thus
+\begin{equation}
+  \left[Y_tZ + Y_c(1-Z)\right] - X\beta_c = Z\tau + (ZX\beta_c)\eta + \epsilon,
+  \label{p1:eq:fullmodel2}
+\end{equation}
+is the true population model of interest. The left hand side is nothing more than the residuals left after (\ref{p1:eq:stage1}).
+
+When fitting this model on the entire data set, the control group will not affect estimates of \(\tau\) or \(\eta\) since \(Z_i = 0\) in the control
+group. We restrict attention to the treatment group, \(Z_i = 1\), simplifying to
+\begin{equation}
+  Y - X\beta_c = \tau + (X\beta_c)\eta + \epsilon.
+  \label{p1:eq:fullmodel4}
+\end{equation}
+
+To remove the dependence between \(\tau\) and \(\eta\), we center \(X\beta_c\) on the right hand side of (\ref{p1:eq:fullmodel4}) relative to the
+treatment group to induce orthogonality. Let \(\overline{\left(X\beta_c\right)_1}\) represent the mean of \(X\beta_c\) amongst observations where
+\(Z_i = 1\). Now (\ref{p1:eq:fullmodel4}) can be rewritten as
+\begin{align}
+  \label{p1:eq:fullmodel5}
+  \begin{split}
+    Y - X\beta_c &= \tau + \left(X\beta_c - \overline{\left(X\beta_c\right)_1}\right)\eta + \overline{\left(X\beta_c\right)_1}\eta + \epsilon\\
+    &= \left(\tau + \overline{\left(X\beta_c\right)_1}\eta\right) + \left(X\beta_c - \overline{\left(X\beta_c\right)_1}\right)\eta + \epsilon\\
+    &= \tau' + \left(X\beta_c - \overline{\left(X\beta_c\right)_1}\right)\eta + \epsilon.
+  \end{split}
+\end{align}
+
+This gives us a more natural interpretation of the intercept. \(\tau\) is the expected treatment effect when \(X = 0\), which may not be an
+interesting value of \(X\). However, \(\tau'\) is the expected treatment effect when \(X\) is at its mean. The estimated treatment effect is
+equivalent to estimate from the methodology in \citet{peters1941method} and \citet{belson1956technique}, where
+\(\hat{\tau}' = n_t^{-1} \sum_{n_t} (Y_i - X\hat{\beta}_c), \{i : Z_i = 1\}\). The estimate and interpretation of \(\eta\) does not change between
+(\ref{p1:eq:fullmodel4}) and (\ref{p1:eq:fullmodel5}).
+
+To simplify notation forward, we will assume that \(X\beta_c\) is centered as described above such that \(\tau = \tau'\), and that \(\tau\) is
+therefore interpreted as the same treatment effect from \citet{peters1941method} and \citet{belson1956technique}.
+
+\subsubsection{Reasonable values for \texorpdfstring{\(\eta\)}{eta}}
+\label{p1:calculations:problem:reasonable}
+
+Since we will be fitting the second stage model only on the treatment group, (\ref{p1:eq:fullmodel2}) becomes
+\begin{equation}
+  Y_t - X\beta_c = \tau + X\beta_c\eta + \epsilon,
+  \label{p1:eq:reasonable1}
+\end{equation}
+in the population of treated individuals. When \(\eta = 0\), the treatment effect \(\tau\) is constant across all individuals.
+
+Now, consider instead the case where \(\eta = -1\). Then (\ref{p1:eq:reasonable1}) becomes
+\begin{equation}
+  Y_t = \tau + \epsilon,
+  \label{p1:eq:reasonable2}
+\end{equation}
+implying that the response under treatment is constant across individuals, within individual error.
+
+If \(\eta < -1\), the relationship between \(Y_t\) and \(Y_c\) is inverted, so that the covariates \(X\) have directly opposite relationship on the
+response. For example, if age is positively associated with \(Y_c\), for \(\eta < -1\), age would be negatively associated with \(Y_t\).
+
+On the positive side, while we do not have a nice boundary condition as \(-1\), large values of \(\eta\) are equally troublesome. Namely, for large
+values of \(\eta\), the effect of the coefficients is magnified several-fold.
+
+All three of these cases, while plausible, would represent a treatment effect outside the normal considerations, and outside the scope of this
+work. Therefore, we will limit our investigation to \(\eta \in (-1, 2)\). The choice of an upper bound of \(2\) is somewhat arbitrary, but we feel
+represents a natural cut-off point for ``large'' positive values.
+
+\subsection{Standard Error Correction}
+\label{p1:calculation:s.e.correction}
+
+\subsubsection{Uncorrected Estimator}
+\label{p1:calculation:s.e.correction:naive}
+
+Before we derive the corrected standard error estimator, we can show the derivation of the uncorrected standard error estimator, both to provide a
+comparison point and to demonstrate a straightforward application of a sandwich estimator. Obviously this is not the only way (nor the simplest) to
+obtain this estimate, but as we show, it produces a more general estimate for the standard error from ordinary least squares that, with some
+assumptions, reduces to the form of the standard error calculated directly from the linear model.
+
+This approach is to discard the variance introduced from the first stage model in (\ref{p1:eq:stage1}) and focus solely on estimating the standard
+error of \((\tau, \eta)\) from (\ref{p1:eq:fullmodel2}). In this uncorrected approach, in the second stage model, \(\hat{\beta}_c\) is considered
+fixed, so we start with a slightly modified version of (\ref{p1:eq:fullmodel4}),
+\begin{equation}
+  Y - X\hat{\beta}_c = \tau + X\hat{\beta}_c\eta + e.
+\end{equation}
+
+Consider both \(X_i\) and \(\hat{\beta}_c\) as column vectors of height \(p\), such that \(X_i'\hat{\beta}_c\) is scalar. Following along with the
+typical derivation of estimating equations to solve linear regression, for example in \citet{carroll2006measurement}, we can define the estimating
+equation as
+\begin{equation}
+  \psi_i(Y_i; \tau, \eta) = (Y_i - X_i'\hat{\beta}_c - \tau - \eta X_i'\hat{\beta}_c)\binom{1}{X_i'\hat{\beta}_c},
+  \label{p1:eq:esteqn-psi}
+\end{equation}
+noting that \(\psi_i \in \R_2\).
+
+Therefore, our estimates of \((\tau, \eta)\) come from solving
+\begin{equation}
+  \binom{0}{0} = \sum_{\{i:Z_i = 1\}} \psi_i(Y_i; \tau, \eta) = \Psi(Y; \tau, \eta).
+  \label{p1:eq:esteqn-total}
+\end{equation}
+
+The bread matrix is the expectation of partial derivative of the estimating equation, so
+\begin{equation}
+  B^{(u)}(\tau, \eta) = B_{n_t}^{(u)}(\hat{\tau}, \hat{\eta}) = \sum_{\{i:Z_i = 1\}} \left[
+    \begin{array}{cc}
+      1 & X_i'\hat{\beta}_c \\
+      X_i'\hat{\beta}_c & (X_i'\hat{\beta}_c)^2
+    \end{array}\right].
+  \label{p1:eq:esteqn-bn}
+\end{equation}
+
+The equality of \(B^{(u)}(\tau, \eta)\) and \(B_{n_t}^{(u)}(\hat{\tau}, \hat{\eta})\) is immediately obvious since in the uncorrected derivation, we
+do not consider \(\hat{\beta}_c\) as random. The superscript \((u)\) is to indicate this is from the uncorrected approach.
+
+Further, the meat matrix is the second non-central moment of \(\Psi\), so
+\begin{equation}
+  M^{(u)}(\tau, \eta) = \sum_{\{i:Z_i = 1\}}\left(\E\left(Y_i - X_i'\hat{\beta_c} - \tau - \eta X_i'\hat{\beta_c}\right)^2 \left[
+      \begin{array}{cc}
+        1 & X_i'\hat{\beta}_c \\
+        X_i'\hat{\beta}_c & (X_i'\hat{\beta}_c)^2
+      \end{array}\right]\right).
+  \label{p1:eq:esteqn-mn}
+\end{equation}
+
+Since \(Y_i - X_i'\hat{\beta_c} - \tau - \eta X_i'\hat{\beta_c}\) is an error term, it is centered, and thus we can estimate as
+\begin{equation}
+  M_{n_t}^{(u)}(\hat{\tau}, \hat{\eta}) = \sum_{\{i:Z_i = 1\}}\left((Y_i - X_i'\hat{\beta_c} - \hat{\tau} - \hat{\eta}
+    X_i'\hat{\beta_c})^2 \left[
+      \begin{array}{cc}
+        1 & X_i'\hat{\beta}_c \\
+        X_i'\hat{\beta}_c & (X_i'\hat{\beta}_c)^2
+      \end{array}\right]\right),
+  \label{p1:eq:esteqn-mnest}
+\end{equation}
+
+The estimate of the covariance matrix is thus
+\begin{equation}
+  B_{n_t}^{(u)}(\hat{\tau}, \hat{\eta})^{-1} M_{n_t}^{(u)}(\hat{\tau}, \hat{\eta}) B_{n_t}^{(u)}(\hat{\tau}, \hat{\eta})^{-T}.
+  \label{p1:eq:esteqn-naive}
+\end{equation}
+
+If we make the assumption that errors \(\epsilon_i\) are homoscedastic with common mean 0 and common variance \(\sigma^2\) and that we have some
+\(\hat{\sigma^2}\) as an unbiased estimator for \(\sigma^2\), then since \(Y_i - X_i'\hat{\beta_c} - \tau - \eta X_i'\hat{\beta_c} = \epsilon_i\), we
+have that its variance is \(\sigma^2\). Then the meat matrix is nothing more than
+\begin{equation}
+  M^{(u)}(\tau, \eta) = \sigma^2 B^{(u)}(\tau, \eta),
+  \label{p1:esteqn-m_with_assumption}
+\end{equation}
+with a corresponding equality for the estimated version, so that (\ref{p1:eq:esteqn-naive}) simplifies to
+\begin{equation}
+  \hat{\sigma}^2B_{n_t}^{(u)}(\hat{\tau}, \hat{\eta})^{-1},
+  \label{p1:eq:esteqn-naive_simple}
+\end{equation}
+which is the covariance estimate derived directly from ordinary least squares.
+
+\subsubsection{Corrected Estimator}
+\label{p1:calculation:s.e.correction:corrected}
+
+We can use stacked estimating equations to account for the additional variability introduced from the first stage model. We now have two different
+forms of the estimating equations,
+\begin{align}
+  \phi_i(Y_i; \beta_c) & = (Y_i - X_i'\beta_c)X_i,\\
+  \psi_i(Y_i, \beta_c; \tau, \eta) & = (Y_i - X_i'\beta_c - \tau - \eta X_i'\beta_c)\binom{1}{X_i'\beta_c},
+\end{align}
+where \(\phi_i(Y_i; \beta_c) \in \R_p\) and \(\psi_i(Y_i, \beta_c; \tau, \eta) \in \R_2\). \(\phi\) represents the contribution to the variance from
+the first stage, while \(\psi\) represents the contribution from the second stage.
+
+Therefore, estimators for the all parameters of interest, \((\beta_c, \tau, \eta)\), are solutions from
+\begin{align}
+  \left(\mathbf{0}\middle) = \middle(
+  \begin{array}{l}
+    \displaystyle \sum_{\{i:Z_i = 0\}} \phi_i(Y_i; \beta_c)\\
+    \displaystyle \sum_{\{i:Z_i = 1\}} \psi_i(Y_i, \beta_c; \tau, \eta)
+  \end{array}
+  \middle) = \middle(
+  \begin{array}{l}
+    \Phi(Y; \beta_c)\\
+    \Psi(Y, \beta_c; \tau, \eta)
+  \end{array}
+  \right).
+\end{align}
+
+Since there is a natural demarcation between the two forms of the estimating equations, we can approach this derivation in a blocked matrix
+format. The bread matrix has the form
+\begin{equation}
+  B(\beta_c, \tau, \eta) = \left[
+    \begin{array}{cc}
+      B_{11} & B_{12} \\
+      B_{21} & B_{22}
+    \end{array}
+  \right] = \left[
+    \begin{array}{cc}
+      \E \pderiv{\beta_c}\Phi(Y; \beta_c) & \E \pderiv{(\tau, \eta)}\Phi(Y; \beta_c)\\
+      \E \pderiv{\beta_c}\Psi(Y, \beta_c; \tau, \eta) & \E \pderiv{(\tau, \eta)}\Psi(Y, \beta_c; \tau, \eta)\\
+    \end{array}
+  \right],
+\end{equation}
+where \(B_{11} \in \R_{p\times p}\), \(B_{12} \in \R_{p\times 2}\), \(B_{21} \in \R_{2\times p}\) and \(B_{22} \in \R_{2\times 2}\). To simplify
+notation going forward, the submatrices of the bread and meat are written succinctly. For example, \(B_{11}\) is shorthand for
+\(B_{11}(\beta_c, \tau, \eta)\) and that \(\hat{B}_{11}\) is shorthand for \(B_{n_c,11}(\hat{\beta_c}, \hat{\tau}, \hat{\eta})\).
+
+\(B_{11}\) is straightforward since it involves only the first stage, so
+\begin{equation}
+  B_{11} = \hat{B}_{11} = \sum_{\{i:Z_i = 0\}} X_iX_i'.
+  \label{p1:eq:corr-b11}
+\end{equation}
+
+Since the first stage does not include \((\tau, \eta)\),
+\begin{equation}
+  B_{12} = \hat{B}_{12} = 0.
+\end{equation}
+
+\(B_{21}\) is slightly more complicated, since \(\beta_c\) exists in both stages,
+\begin{equation}
+  B_{21} = \sum_{\{i:Z_i = 1\}} \E \left(
+    \begin{array}{c}
+      -(1 + \eta)X_i'\\
+      (Y_i - \tau - 2(1 + \eta)X_i'\beta_c)X_i'
+    \end{array}
+  \right),
+  \label{p1:eq:corr-b21}
+\end{equation}
+and is estimated by
+\begin{equation}
+  \hat{B}_{21} = \sum_{\{i:Z_i = 1\}} \left(
+    \begin{array}{c}
+      -(1 + \hat{\eta})X_i'\\
+      (Y_i - \hat{\tau} - 2(1 + \hat{\eta})X_i'\hat{\beta}_c)X_i'
+    \end{array}
+  \right).
+\end{equation}
+
+Finally,
+\begin{equation}
+  B_{22} = \sum_{\{i:Z_i = 1\}} \E\left[
+    \begin{array}{ccc}
+      1 & X_i'\beta_c\\
+      X_i'\beta_c & (X_i'\beta_c)^2
+    \end{array}
+  \right],
+\end{equation}
+and is estimated by
+\begin{equation}
+  \hat{B}_{22} = \sum_{\{i:Z_i = 1\}} \left[
+    \begin{array}{ccc}
+      1 & X_i'\hat{\beta}_c\\
+      X_i'\hat{\beta}_c & (X_i'\hat{\beta}_c)^2
+    \end{array}
+  \right],
+\end{equation}
+
+The meat matrix \(M(\beta_c, \tau, \eta)\) will be similarly blocked. The diagonal blocks, \(M_{11}\) and \(M_{22}\), will be the variance of \(\Phi\)
+and \(\Psi\) respectively. The off-diagonal blocks are unfortunately much more complicated, if for no other reason than issues of
+dimensionality. However, if we assume that the treatment and control samples are random samples drawn from an infinite population, the samples can be
+considered to be independent, implying a covariance of zero between them. Therefore \(M_{12} = M_{21} = 0\).
+
+\(M_{11}\), being the variance of \(\Phi\), is
+\begin{equation}
+  M_{11} = \sum_{\{i:Z_i = 0\}} \var\left(Y_i - X_i'\beta_c\right)X_iX_i'.
+\end{equation}
+
+Again, \(Y_i - X_i'\beta_c\) is simply the error, which has a zero expectation, so we can estimate this with
+\begin{equation}
+  \hat{M}_{11} = \sum_{\{i:Z_i = 0\}} (Y_i - X_i'\hat{\beta}_c)^2X_iX_i'.
+\end{equation}
+
+The bottom right piece involves all three parameters of interest
+\begin{equation}
+  M_{22} = \sum_{\{i:Z_i = 1\}}  \var \left((Y_i - X_i'\beta_c - \tau - \eta X_i'\beta_c)\binom{1}{X_i'\beta_c}\right),
+  \label{p1:eq:corr-m22}
+\end{equation}
+with corresponding estimate
+\begin{equation}
+  \hat{M}_{22} = \sum_{\{i:Z_i = 1\}}  (Y_i - X_i'\hat{\beta}_c - \hat{\tau} - \hat{\eta} X_i'\hat{\beta}_c)^2\left[
+    \begin{array}{cc}
+      1 & X_i'\hat{\beta}_c \\
+      X_i'\hat{\beta}_c & (X_i'\hat{\beta}_c)^2
+    \end{array}\right],
+\end{equation}
+
+The covariance of \((\tau, \eta)\) is therefore the lower right \(2\times 2\) sub-matrix of
+\begin{equation}
+  B(\beta_c, \tau, \eta)^{-1}M(\beta_c, \tau, \eta)B(\beta_c, \tau, \eta)^{-T}.
+\end{equation}
+
+Rewriting each matrix in its blocked form, we can simplify to
+\begin{equation}
+  \var\big(\tau, \eta\big) = B_{22}^{-1}\left(M_{22} + B_{21}B_{11}^{-1}M_{11}B_{11}^{-T}B_{21}^T \right)B_{22}^{-T}.
+  \label{p1:eq:correctedest}
+\end{equation}
+
+This derivation in based on a more general derivation in \citet[pp. 373]{carroll2006measurement}. That derivation has two additional terms, each of
+which includes \(B_{12}\). In the specifics of our method, \(B_{12} = 0\), so those terms vanish.
+
+Since \(B_{22}(\beta_c, \tau, \eta) = B^{(u)}(\tau, \eta)\) and \(M_{22}(\beta_c, \tau, \eta) = M^{(u)}(\tau, \eta)\), this corrected variance is
+equivalent to the uncorrected variance plus an additional component relating to the first stage. This corresponds with intuition that the uncorrected
+standard error estimate is underestimating because it does not account for the measurement error of \(\hat{\beta}_c\).\footnote{On the topic of
+  measurement error, we explored a variation of this method using regression calibration from the measurement error
+  literature\cite[Ch. 4]{carroll2006measurement} which would account for the measurement error on \(X\hat{\beta}_c\) from the first stage model by way
+  of a shrinkage factor. In simulation studies (similar to those described throughout Section \ref{p1:simulations}) compared to the confidence
+  intervals generated by the methodology we ultimately recommend, the confidence intervals generated by the regression calibration approach
+  undercovered (providing only 80\% coverage on average) and were 20\% wider.}
+
+The simplifying homoscedastic assumptions for this model are that errors \(d\) from the first stage have mean 0 and variance \(\sigma_1^2\) and the
+errors \(e\) from the second stage have mean 0 and variance \(\sigma_2^2\), and all are centered and each have appropriate estimators. Then,
+\begin{equation}
+  \hat{M}_{11} = \hat{\sigma_1^2}\hat{B}_{11},
+  \label{p1:eq:simplify1}
+\end{equation}
+
+\begin{equation}
+  \hat{M}_{22} = \hat{\sigma_2^2}\hat{B}_{22},
+  \label{p1:eq:simplify2}
+\end{equation}
+and (\ref{p1:eq:correctedest}) simplifies to
+\begin{equation}
+  \hat{\sigma_2}^2\hat{B}_{22}^{-1} + \hat{\sigma_1}^2\hat{B}_{22}^{-1}\hat{B}_{21}\hat{B}_{11}^{-1} \hat{B}_{21}^T\hat{B}_{22}^{-T}.
+  \label{p1:eq:simplifiedcorrected}
+\end{equation}
+
+As in the unsimplified version, this is equivalent to the uncorrected variance in (\ref{p1:eq:esteqn-naive_simple}) with an additional linear term.
+
+\subsection{Hypothesis Testing}
+\label{p1:calculation:testing}
+
+Before turning to a confidence interval generated by test inversion, we need to define hypothesis testing in this setting. We need nothing beyond the
+use of the corrected covariance calculations.
+
+Define \(H_0: \eta = \eta_0\) for some \(\eta_0 \in \Omega_\eta\) where \(\Omega_\eta\) is the set of all possible values of \(\eta\). We limit
+ourselves to \(\Omega_\eta = (-1,2)\) here. Let the set of unconstrained estimates of the parameters be
+\(\hat{\lambda} = (\hat{\beta}_c, \hat{\tau}, \hat{\eta})\). Let the set of estimates of the parameters under the constraint imposed by \(H_0\) be
+\(\tilde{\lambda}_0 = (\hat{\beta}_c, \tilde{\tau}_0, \eta_0)\), where \(\tilde{\tau}_0\) is the least squares estimate of \(\tau\) under
+\(H_0\). Estimates for \(\beta_c\) are not affected by constraints on \(\eta\).
+
+We need to consider the choice of which covariance estimate from Section \ref{p1:methodology:test}. We will show below in Section
+\ref{p1:simulations:results:covariance} that the hybrid estimate in (\ref{p1:eq:est-meth-test-hybrid2}) is the simplest form which obtains proper
+coverage, so
+\begin{equation}
+  \sigma^2_{\tilde{\lambda}_0}(\hat{\eta}) = B(\tilde{\lambda}_0)^{-1}M_n(\hat{\lambda})B(\tilde{\lambda}_0)^{-T}.
+  \label{p1:eq:calc-test-se}
+\end{equation}
+
+Note that, considering the piece-wise definition of the bread and meat matrices in (\ref{p1:eq:corr-b11})-(\ref{p1:eq:corr-m22}), \(\eta\) only enters
+into \(B_{21}\) and \(M_{22}\). Therefore, \(\sigma^2_{\tilde{\lambda}_0}(\hat{\eta})\) depends on \(\eta_0\) only through the contributions from
+\(B_{21}\).
+
+We obtain the test that rejects \(H_0\) if
+\begin{equation}
+  \frac{|\hat{\eta} - \eta_0|}{\sigma_{\tilde{\lambda}_0}(\hat{\eta})} \geq z_{(1-\alpha/2)}^*.
+  \label{p1:eq:test}
+\end{equation}
+
+\subsection{Test Inversion}
+\label{p1:calculation:testinversion}
+
+We can invert the test defined in (\ref{p1:eq:test}). Using the hypothesis of interest defined above, \(H_0: \eta = \eta_0\), we can perform a search
+over the space of possible values of \(\eta_0\) and the confidence region would be all \(\eta_0\) for which we do not reject \(H_0\). As in the
+hypothesis test, the version of the covariance estimate matters, and we will use the same as the hypothesis test, (\ref{p1:eq:calc-test-se}).
+
+Beginning with (\ref{p1:eq:test}) and rearranging,
+\begin{equation}
+  |\hat{\eta} - \eta_0| \geq z_{(1-\alpha/2)}^* \sigma_{\tilde{\lambda}_0}(\hat{\eta}).
+  \label{p1:eq:invtest2}
+\end{equation}
+
+To ensure the resulting equation is nicely quadratic and to eliminate the troublesome \(L_1\) norm, we square both sides to obtain
+\begin{equation}
+  w_\alpha(\eta_0) := (\hat{\eta} - \eta_0)^2 - \left(\chi^2_{(1 - \alpha)}(1)\right)^* \sigma^2_{\tilde{\lambda}_0}(\hat{\eta}) \geq 0.
+  \label{p1:eq:inv-testfunction}
+\end{equation}
+
+Inverting the inequality, we obtain as a confidence region
+\begin{equation}
+  r_\alpha(\eta_0) := \left(\eta_0: w_\alpha(\eta_0) \leq 0\right).
+  \label{p1:eq:inv-thetest}
+\end{equation}
+
+As mentioned, in general a confidence region generated by test inversion need not be a continuous interval. \(w_\alpha(\eta_0)\) is quadratic in \(\eta_0\). To
+see this, note that by using (\ref{p1:eq:calc-test-se}), \(\eta_0\) enters the corrected standard error only through the bread, specifically linearly
+in \(B_{21}\). Combining this with (\ref{p1:eq:corr-b21}) and (\ref{p1:eq:correctedest}), we have that \(\sigma^2_{\tilde{\lambda}_0}(\hat{\eta})\) is
+quadratic is \(\eta_0\), implying \(w_\alpha(\eta_0)\) is as well.
+
+This leaves us with four potential shapes of confidence regions. Letting \(c_1 < c_2\) be constant, we can have confidence regions of the form
+\((c_1, c_2)\), \((-\infty, \infty)\), \((-\infty, c_1) \cup (c_2, \infty)\) or \((\varnothing)\). The finite continuous confidence interval is
+desired, and we will show during simulations that it is the most likely result.
+
+An empty confidence set (rejecting \(\eta_0\) for all possible values) is not possible. This should be clear considering (\ref{p1:eq:test}), as when
+\(\eta_0 = \hat{\eta}\), the left hand side is 0, which can never be rejected for any reasonable value of \(\alpha < 1\).
+
+The infinite confidence interval may appear daunting, but in practice has little difference than a very wide confidence interval. Two-stage least
+squares methods having ``wide'' confidence intervals is a known problem in the instrumental variables literature. When the instrumental variable is
+``weak'' (a notion akin to the first stage model fit being poor), the standard errors in the second stage tend to be very
+large.\citep{wooldridge2010econometric} If the first stage model fit is poor, we do not have a model which can predict the response the treated group
+would have seen in the absence of any treatment. Given this, any claim to a traditional treatment effect is weak, and further claiming to be able to
+identify a secondary treatment effect would be even weaker. It is intuitive that in order to identify any information about an ETT effect, we must be
+able to estimate \(Y_c|Z=1\) well.
+
+Disjointly infinite confidence regions appearing are an undesirable curiosity. However, such regions are infrequent in our simulation results (see
+Section \ref{p1:simulations:infci}).
+
+Expressing \(w_\alpha(\eta_0)\) in quadratic form is a non-trivial task.\footnote{When deriving the coefficient on the quadratic term with the use of
+  symbolic software, the resulting coefficient was half a page and interpretation was utterly hopeless.} However, since we know \(w_\alpha(\eta_0)\)
+is quadratic, by solving \(w_\alpha(\eta_0)\) for three values of \(\eta_0\), we can fit a regression line with a quadratic term to obtain the numeric
+coefficients. This does not allow interpretation of the coefficients (to be able to firmly determine situations that cause each of the three shapes of
+confidence regions) but it does simplify computation by avoiding the need to iterate over all values of \(\eta_0\).

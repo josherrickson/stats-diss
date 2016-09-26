@@ -1,0 +1,12 @@
+We have introduced an analysis to answer a question which is popular in applied literature; are those more at risk benefited most by a treatment?
+After correcting the standard error calculations, we found that an ordinary Wald-style confidence interval was not sufficient. Our method considers
+multiple hypotheses about the parameter of interest by performing a test inversion, which does lead to a slightly more complicated approach.
+
+On the other hand, following our generalized score procedure includes several advantages. First, by not having to resort to a profile likelihood style
+approach, we have only a single parameter of interest (\(\eta\)) to consider, instead of a parameter of interest which is dependent on the nuisance
+parameter (\(\tau\)).
+
+Secondly, and related to this, we are not required to fit multiple second stage regression models, saving substantial computational complexity.
+
+Finally, because we have shown that our test statistic is quadratic (Section \ref{p1:simulations:results:covariance}), we avoid an exhaustive search
+over the parameter space as is common in test inversion settings.

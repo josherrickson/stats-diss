@@ -1,0 +1,213 @@
+Here we present one of the papers which first brought this issue to our attention, and show via simulations that the issues we identify do exist. We
+follow this by discussing an alternative framework which may appeal to some and examine an additional concern, namely that the PBPH method, in
+addition to having an inflated Type I error, is also biased.
+
+\subsection{Empirical Example}
+\label{p1:motivation:example}
+
+One of the papers which motivates this work is \citet{gine2012credit}. In it, the authors are studying microloans, which are very small loans
+typically given to impoverished individuals (for an example in action, see www.kiva.org). Banks in developing countries where infrastructures such as
+photographic ID cards or personal biometrics do not exist can have trouble tracking individuals. Borrowers in default can visit different banks or
+bank officers and give new names, receiving loans that would not be given to someone with such a history of default. Some countries have started
+implementing massive programs designed to track borrowers, using fingerprinting or iris scanning or some similar method.
+
+Honest brokers in both sides in the microloans transaction should benefit from the addition of the identification. The bank benefits by lowering its
+default rate. Those borrowers who are not prone to defaulting can more easily build a positive credit history, leading to loans with more favorable
+terms.
+
+However, the authors note that there is so far little empirical evidence of the benefit of such a system. The authors performed a randomized
+experiment in rural Malawi. Farmers received microloans from a bank (in the form of credit at a local agricultural supply station, not cash) at the
+beginning of a growing season, and repaid the loan after the season's harvest was sold. The banks had the basics of a credit history system, but it
+relied on bank officers personal knowledge of individuals - a farmer could easily go to another officer or bank as described above. The response of
+interest we will focus on is fraction of loan repaid on time.
+
+The authors randomized all farmers who applied at the beginning of the season into two groups, a control group and a treatment group.\footnote{In the
+  actual study, the unit of randomization was a ``club,'' a collection of farmers, who apply collectively and share liability in exchange for
+  favorable lending terms from the bank. This added complication does not affect our general discussion or results, and thus is disregarded here. See
+  the following chapter, specifically Section \ref{p2:simulations:gine}, where we re-introduce the clubs.} After an explanation of the benefits and
+punishments inherent in a proper credit history system, the bank took fingerprints from those in the treatment group. Until this point we have
+described a designed experiment rather than an observational study, thus minimizing any concerns about treatment assignment and covariate or response
+bias. However, the randomization is performed amongst farmers who apply for loans. After the randomization and application of treatment, the loan
+officers decided whether to offer loans, and then farmers decided whether to accept the terms. Roughly 1/6th of the farmers (520 of 3,082) ended up
+accepting the loans and participating in both the prior and post surveys.
+
+First the authors fit a model predicting the response amongst the control group only, similar to
+\begin{equation}
+  Y = X\beta + \epsilon,
+\end{equation}
+where \(X\) is a matrix of baseline covariates, including an intercept. Thus, \(\hat{Y}_c = X\hat{\beta}\) is the predicted potential response to
+control, amongst the entire sample. Next, fit two separate second stage models on the entire data. First,
+\begin{equation}
+  Y = Z\gamma + \hat{Y}_c\rho + (Z\hat{Y}_c)\tau + \epsilon,
+  \label{p1:eq:mot-ex-panelb}
+\end{equation}
+where \(Z\hat{Y}_c\) is the interaction between treatment and predicted response. Secondly, for interpretability, they split the sample into quintiles
+based upon the predicted response and fit
+\begin{equation}
+  Y = Z\gamma + \sum_{i=1}^5 \big[D_i\rho_i + (ZD_i)\tau_i\big] + \epsilon.
+  \label{p1:eq:mot-ex-panelc}
+\end{equation}
+
+Here \(D_i\) is an indicator of membership in quintile \(i\). This has
+the same basic idea of examining the interaction between treatment effect and predicted response, but admits an easier interpretation.
+
+The results for the terms which the authors attach causal interpretations to are included in Table \ref{p1:tab:mot:ex:fingerprint}.
+
+<<echo=FALSE, results="asis">>=
+d <- data.frame(toref = c("(Eq. \\ref{p1:eq:mot-ex-panelb})",
+                          "",
+                          "(Eq. \\ref{p1:eq:mot-ex-panelc})",
+                          rep("", 4)),
+                pred = c("Fingerprint",
+                         "Fingerprint : Predicted Repayment",
+                         "Fingerprint : Quintile 1",
+                         "Fingerprint : Quintile 2",
+                         "Fingerprint : Quintile 3",
+                         "Fingerprint : Quintile 4",
+                         "Fingerprint : Quintile 5"),
+                coefse = c("0.719 (.108)",
+                           "-0.807 (.120)",
+                           "0.506 (.125)",
+                           "0.056 (.105)",
+                           "-0.001 (.048)",
+                           "-0.040 (.044)",
+                           "-0.075 (.044)"),
+                stars = c(rep("***", 3), rep("", 3), "*"))
+print(xtable(d,
+             caption=c("Coefficient estimates for the two models taken from \\citet{gine2012credit}. In the second model, quintile 1 contains individuals with the lowest estimated repayment rate, and quintile 5 contains those with the highest estimated repayment rate. The stars follow R notation, such that one (*) and three stars (***) indicates significance at the 10\\% and 1\\% level respectively.", "Results from \\citet{gine2012credit}"),
+             align=c("crlrl"),
+             label="p1:tab:mot:ex:fingerprint"),
+      include.rownames = FALSE,
+      include.colnames = FALSE,
+      sanitize.text.function=function(x){x},
+      comment = FALSE,
+      add.to.row = list(pos=list(-1),
+                        command=" & & Coef (SE) & \\\\\n")
+)
+@
+
+The negative interaction effect from (\ref{p1:eq:mot-ex-panelb}) and the pattern of interaction effects from (\ref{p1:eq:mot-ex-panelc}) show what the
+authors were hoping for, namely that it appears those who are predicted to have the worst response are those whom the treatment helps most.
+
+This agrees nicely with the intuition that farmers who already repay their loans don't need the extra incentive/threats, and that those who don't
+repay their debt are now forced to do so in order to continue obtaining loans. This knowledge could be beneficial to policy decisions, in that it may
+be easier to get a treatment approved which is most effective on those at the highest risk.
+
+\subsection{Computational Evidence}
+\label{p1:motivation:computational}
+
+We now show that by not considering the error associated with predicted repayment from the first stage, the standard errors in Table
+\ref{p1:tab:mot:ex:fingerprint} are underestimated, increasing Type I error. We can empirically show the existence of the issue by performing the
+uncorrected PBPH method in a setting where we know the true treatment effect and interaction.
+
+If we take the control group from \citet{gine2012credit} and randomly split into a faux treatment and faux control group, the true treatment effect in
+any subgroup is fixed to zero. The true control group sample size is 563, noted to alleviate any concerns about small sample issues.
+
+When we now perform the uncorrected PBPH method on this faux treatment and faux control groups, we know that the treatment effect in any sample
+subgroup should be, on average, zero. We focus here, and beyond, on the version of the second stage defined within \citet{gine2012credit} by
+(\ref{p1:eq:mot-ex-panelb}), with a continuous interaction.
+
+<<echo=FALSE>>=
+# generates gine_naive_coverage
+source("code/gine_naive_coverage.R")
+gine_naive_coverage <- mean(gine_sim_res[,1] < .05)*100
+@
+
+Performing the randomization into faux treatment and faux control groups 1,000 times, we reject the null hypothesis in \Sexpr{gine_naive_coverage}\%
+of the runs, much higher than the expected 5\%.
+
+\subsection{An Alternative Framework}
+\label{p1:motivation:alternative}
+
+If the appeal to a causal framework does not convince the reader, we can reframe the PBPH method in terms of controlling for nuisance variables in a
+regression model. Consider a setting with response \(y\) and two independent variables, \(x_1\) and \(x_2\), where the former is the variable of
+interest and the latter is a nuisance parameter (e.g., \(x_1\) is a treatment variable and \(x_2\) is some demographic variable; though in this
+framework we need not assume that \(x_1\) is categorical). Assume without loss of generality that \(y\), \(x_1\) and \(x_2\) are centered. The
+traditional least squares model for this setup would be
+\begin{equation}
+  y_i = \beta_1 x_{1i}  +\beta_2 x_{2i} + \epsilon_i,
+  \label{p1:eq:mot-alt-basicregression}
+\end{equation}
+where we simultaneously consider both controlling the nuisance parameter and estimating the effect of the variable of interest.
+
+However, it may be beneficial to consider these two issues separately - firstly, removing from \(y\) the variance associated with \(x_2\), and then
+following up by independently investigating the effect of \(x_1\). To be more precise, in a first stage, we fit
+\begin{equation}
+  y_i = \beta_2 x_{2i} + \epsilon_{1i},
+  \label{p1:eq:mot-alt-stage1}
+\end{equation}
+to obtain \(\hat{\beta_2}\), and then as a second stage, fit
+\begin{equation}
+  y_i - \hat{\beta_2}x_{2i} = \beta_1 x_{1i} + \epsilon_{2i}.
+  \label{p1:eq:mot-alt-stage2}
+\end{equation}
+
+The main benefit of this modular approach is that it allows us to perform model fit diagnostics on the first stage, and to gain confidence in our
+modeling of the nuisance parameters, before we approach analysis on the parameter of interest. We then have two models which each perform their sole
+job to the best of their ability, rather than a single model which attempts to satisfy two masters.
+
+\citet{cochran1969use} considered the Peters-Belson method within this framework, and as mentioned above in Section \ref{p1:background:petersbelson},
+showed that it is preferable to utilize only the control group in (\ref{p1:eq:mot-alt-stage1}) to obtain \(\hat{\beta_2}\). To re-summarize Cochran's
+results, his claim is, except in cases where the \(\hat{\beta_2}\) obtained from only the control group does not differ from the \(\hat{\beta_2}\)
+obtained only from the treatment group and where the sample means of \(x_2\) in the control group and treatment group are different, then using the
+\(\hat{\beta_2}\) from the control group only is optimal.
+
+The benefit of this view of the method is that it directly shows that the standard error calculations which consider only the variance in the second
+stage are incorrect. In the basic least squares model in (\ref{p1:eq:mot-alt-basicregression}), the closed form solution for the standard error of
+\(\hat{\beta_1}\) is (with all the typical ordinary least squares assumptions)
+\begin{equation}
+  \textrm{s.e.}(\hat{\beta_1}) = \sqrt{\frac{1}{n-3}\frac{\sum x_2^2 \sum r^2}{\sum x_1^2 \sum x_2^2 - (\sum x_1x_2)^2}},
+\end{equation}
+where \(r\) are the observed residuals. This standard error for \(\hat{\beta_1}\) depends on \(x_2\). However, if we disregard the measurement error
+on \(\hat{\beta}_2\) while we look at the standard error for \(\hat{\beta_1}\) from (\ref{p1:eq:mot-alt-stage2}), then
+\begin{equation}
+  \textrm{s.e.}(\hat{\beta_1}) = \sqrt{\frac{1}{n-2}\frac{\sum r^2}{\sum x_1^2}},
+\end{equation}
+and we lose this dependence (except through the residuals). This shows that the typical least squares regression standard error calculations will not
+suffice in a PBPH approach, thus further suggesting the need for a standard error calculation that will include the variance from both
+(\ref{p1:eq:mot-alt-stage1}) and (\ref{p1:eq:mot-alt-stage2}).
+
+\subsection{Relationship Between Bias and Model Fit}
+\label{p1:motivation:modelfit}
+
+Many well-known estimates are biased, such as the traditional standard error estimate. However, the bias-variance trade-off often allows these biased
+estimates to be very practical. The estimate of the interaction coefficient in a PBPH approach is similar, in addition to having improper coverage, it
+is also biased.
+
+The bias is not an issue in the final conclusion (see Appendix \ref{p1:appendix:bias}). However, it can be educational to look at what settings yield
+larger bias. This bias does not affect all models equally. As might be suspected, models which correctly specify the set of independent variables
+minimize the bias. Unobserved variables or included noise variables increase the bias. Even in a correctly specified model, there is some level of
+bias.
+
+First, consider when the first stage regression fit excludes informative unobserved variables. Formally we represent this as a decrease in model fit,
+measured by the \(R^2\) statistic. The bias increases as the \(R^2\) decreases.
+
+<<echo=FALSE, fig.cap="Visualizing the relationship between bias and the model fit. The true model includes only the first 20 variables, so the left side represents models with unobserved covariates, and the right side represents models with additional noise. Based upon 1,000 simulations at each number of variables.\\label{p1:graph:mot:fit:biasr2}", fig.scap="Bias and model fit">>=
+# Load bias_r2.save
+source("code/bias_r2.R")
+@
+
+The second effect is from including noise variables in the model. Regardless of the estimated coefficient on these variables (though perhaps not in
+the case where the estimated coefficient is identically zero), the bias increases with the introduction into the model of variables wholly unrelated
+to the response.
+
+Of the two effects, the former, from unobserved informative variables, has a much larger effect than the latter, from included noise variables.
+
+We ran a simulation designed to observe these effects. Using a sample size of 100, we generated 40 independent variables, \(X_1\) through \(X_{40}\),
+and then generated a response
+\begin{equation}
+  Y_i = \sum_{j=1}^{20} \beta_j X_{ij} + \epsilon_i,
+  \label{p1:eq:mot-modelfit-y}
+\end{equation}
+so that \(Y\) is a linear combination of the first 20 \(X_j\) but is independent of the remaining 20. \(\epsilon_i\) in noise, drawn from
+\(N(0,1)\). Additionally, we generate treatment indicator \(z\) where \(z_i\) = 0 for the first half of the units and \(z_i\) = 1 for the
+remaining. Since \(p(Y|z) = p(Y)\), the true treatment effect is 0.
+
+We repeated this data generation 1,000 times. In each iteration, we performed the PBPH method 40 times, where method \(k\) includes in the first stage
+only \(\left\{X_i : i \leq k\right\}\).  Therefore, \(k\) = 20 is an oracle model which contains all informative variables and no noise, \(k\) = 1 is
+the least informative model, containing only a single informative variables, and \(k\) = 40 is the most over-saturated model, containing all
+informative variables but also all the uninformative ones as well.
+
+Figure \ref{p1:graph:mot:fit:biasr2} shows the results. As you can see, as the model fit increases (i.e. as \(k\) approaches 20), the bias drastically
+drops to its minimum at \(k\) = 20. However, as the noise variables begin entering the model (i.e. as \(k\) increases above 20), the bias begins to
+increase, albeit slightly. And as mentioned before, even the perfect oracle model (\(k\) = 20) does not eliminate the bias entirely.

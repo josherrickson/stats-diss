@@ -1,0 +1,98 @@
+\subsection{Data Generation}
+\label{p3:simulations:datagen}
+
+Let there be some predictor \(X\) of response \(Y \in \{0, 1\}\). We have \(Z \in \{0, 1\}\) representing membership in a control and treatment group
+respectively. The goal is to fit a two step model, where the first step is a logistic model fit only on the control group,
+\begin{equation}
+  \logit\big(\E(Y_c | X)\big) = \alpha_0 + \beta_0 X.
+\end{equation}
+
+Then \(\hat{Y}_c\) is the predicted response to control. In the second stage, we wish to determine whether the effect of treatment is additive (on the
+probability scale) or multiplicative (additive on the logit scale). The two comparison models are
+\begin{equation}
+  \E(Y|Z, \hat{Y}_c) = \beta_1 Z + \hat{Y}_c,
+  \label{p3:eq:linear2}
+\end{equation}
+for additive in the probability scale, and
+\begin{equation}
+  \logit\big(\E(Y | Z, \hat{Y}_c)\big) = \beta_2 Z + \logit\left(\hat{Y}_c\right),
+  \label{p3:eq:logistic2}
+\end{equation}
+for additive on the logit scale.
+
+We will draw \(X \sim N(0,1)\). If \(\beta_0\) is close to 0, then \(\hat{Y}_c\) will have little variation, and differentiating between
+(\ref{p3:eq:linear2}) and (\ref{p3:eq:logistic2}) is difficult. Additionally, differentiating between models will be difficult if the treatment effect
+(\(\beta_1\) or \(\beta_2\)) is small. To visualize this, see Figure \ref{p3:fig:sim:compareplot}. As \(\beta_2\) decreases, the logistic model fit
+becomes closer to linear, and differentiating the two models is difficult. However, as \(\beta_2\) increases, the difference between the models is
+easier to detect.
+
+<<echo=FALSE, fig.cap="Comparison of second stage linear vs logistic model fits. The solid black line is $Z$ = 0. Solid lines are from (\\ref{p3:eq:logistic2}) with $\\beta_2 = .5, 1, 1.5$ and $2$ as the lines get further from the black line. The dashed lines are from (\\ref{p3:eq:linear2}) fit upon the logistic fitted values. As the $\\beta$ increases, the lines become easier to distinguish.\\label{p3:fig:sim:compareplot}", fig.scap="Linear vs logistic best fit comparison">>=
+plot(function(x) x, 0, 1, xlab = expression(hat(Y)[0]), ylab = expression(Y))
+x <- seq(.01, .99, by = .01)
+
+y <- arm::invlogit(car::logit(x) + .5)
+lines(y~x, ylim = c(0,1), col = 2)
+lines(pmax(0, pmin(1, predict(lm(y ~ x)))) ~ x, col = 2, lty = 2)
+
+y <- arm::invlogit(car::logit(x) + 1)
+lines(y ~ x, ylim = c(0,1), col = 3)
+lines(pmax(0, pmin(1, predict(lm(y ~ x)))) ~ x, col = 3, lty = 2)
+
+y <- arm::invlogit(car::logit(x) + 1.5)
+lines(y ~ x, ylim = c(0,1), col = 4)
+lines(pmax(0, pmin(1, predict(lm(y ~ x)))) ~ x, col = 4, lty = 2)
+
+y <- arm::invlogit(car::logit(x) + 2)
+lines(y ~ x, ylim = c(0,1), col = 5)
+lines(pmax(0, pmin(1, predict(lm(y ~ x)))) ~ x, col = 5, lty = 2)
+@
+
+\subsection{Results}
+\label{p3:simulations:results}
+
+We compare the two risk functions, (\ref{p3:eq:risk_quad}) using the quadratic loss function and (\ref{p3:eq:risk_logistic}) using the logistic
+loss. We then define the decision criterion to choose (\ref{p3:eq:linear2}) if the risk associated with (\ref{p3:eq:linear2}) is smaller than
+(\ref{p3:eq:logistic2}).
+
+The results across varying values of \(\beta_1\) and \(\beta_2\) are in Figure \ref{p3:graph:sim_twostage}.
+
+<<echo=FALSE, fig.width=5, fig.height=6, fig.cap="Performance of risk functions using quadratic loss and logistic loss. As the effect size increases, both risk functions perform better at choosing the correct model, though the logistic risk function always outperforms the quadratic risk function.\\label{p3:graph:sim_twostage}", fig.scap="Choosing between logistic or quadratic loss to define the risk in choosing linear vs logistic model">>=
+source("code/twostagesim.R")
+
+
+op <- par(mfrow = c(2,1),
+          oma = c(3,4,0,0) + 0.1,
+          mar = c(0,0,3.5,1) + 0.1)
+for (i in 1:2) {
+  plot(bigsave[, i], bigsave[, 2 + i],
+       type = 'l',
+       col = 1,
+       ylim = c(0.5, 1),
+       yaxt ='n')
+  if (i == 1) {
+    title(expression(Additive (beta[1])), line = 1)
+  } else {
+    title(expression(Multiplicative (beta[2])), line = 1)
+  }
+  lines(bigsave[,i], bigsave[,4 + i],
+        type = 'l',
+        col = 2,
+        lty = 2)
+  abline(h = .5,
+         col = 'lightgrey',
+         lty = 5)
+  axis(2,
+       c(.5, .6, .7, .8, .9, 1),
+       c("50%", "60%", "70%", "80%", "90%", "100%"),
+       las  =1)
+  legend("bottomright",
+         col = c("black", "red"),
+         lty = c(1, 2),
+         legend = c("Quadratic Loss", "Logistic Loss"))
+}
+title(ylab = "Percentage Correct",
+      outer = TRUE, line = 3)
+@
+
+As we can see from the results, the logistic risk function outperforms the quadratic risk function in choosing the correct scale for the treatment
+effect. Therefore we recommend using a risk function with logistic loss.

@@ -1,0 +1,25 @@
+Based upon the proceeding results, we summarize and recommend the following approach.
+
+The first stage model should predict response amongst the control group only. The practitioner should strive to fit the first stage model as well as
+possible. Overfitting, up to the limits of the rate in Section \ref{p1:simulations:datagen}, is not a concern. If good first stage model fit cannot be
+obtained, the conclusion should be that the data is inadequate to examine any additional treatment effect beyond the average treatment effect or
+effect of treatment on the treated.
+
+Once a suitable first stage model is found, use its coefficients to predict the response in the absence of control amongst the treatment group
+members. This \(\hat{Y}_c\) can be differenced from \(Y = Y_t\), and regressed against \(\hat{Y}_c\). After performing this regression, give proper
+consideration to the standard error and hypothesis test. Both should be computed as described earlier in the chapter.
+
+The constant in the resultant second stage model can be interpreted as the main treatment effect. The coefficient on \(\hat{Y}_c\) can be interpreted
+as an additional effect due to predicted response in the absence of treatment.
+
+Due to the rarity of the disjointly infinite confidence region and the difficulty in interpretation of such a region, we recommend considering such a
+result as equivalent to a continuous infinite confidence interval. This will make coverage very slightly more conservative (for example, in one run,
+coverage increased from 95.4\% to 95.7\%). We recommend not generating confidence intervals if the hypothesis test fails to reject, to help minimize
+the complications here.
+
+If this recommendation is accepted, the confidence interval can always be considered continuous. If the confidence interval is wide, a next step
+should be to strengthen the first stage. Failing that, the conclusion should be that we can find no significant evidence of a interaction between
+treatment effect and predicted response in the absence of treatment.
+
+We have implemented this suggested methodology in an R package \textbf{pbph}. All simulations were performed using the \verb|pbph| function in this
+package.

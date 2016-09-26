@@ -1,0 +1,61 @@
+We now re-examine the results of \citet{gurm2013comparative}. In the paper, the authors are examining whether vascular closure devices (VCDs) can
+reduce the risk of vascular complications after arterial access. After matching those with VCDs and those without, the authors estimate the effect of
+the usage of VCDs on the existence of vascular complications by way of a conditional logistic regression model, conditioning on the matched sets. The
+results show a statistically significant reduction of the odds of a vascular complication, with an odds ratio of 0.78.
+
+\subsection{Detecting Treatment Effect on Linear Scale}
+\label{p3:gurm:linear}
+
+The published results show that the effect of VCD usage is linear on the logit scale. The authors, not being aware of our recommendations in this
+work, do not ask whether the treatment effect might be better modeled by linear on the probability scale.
+
+We first implement our recommendations in Section \ref{p3:strata:twoclr}, comparing second-stage models based upon (\ref{p3:eq:testlinear}) and
+(\ref{p3:eq:testmult}). Let \(Y\) be the binary response of a vascular complication, let \(X\) be an \(n\times p\) matrix of covariates (such as a
+constant column for the intercept, prior congestive heart failure and the hospital in which the procedure was performed), and let \(Z\) be the
+treatment indicator, the use of a VCD. The first-stage model is
+\begin{equation}
+  \logit\big(\E(Y | X)\big) = X\beta.
+  \label{p3:eq:gurm_1}
+\end{equation}
+
+The second stage models introduce \(\lambda\) from (\ref{p3:eq:lambda}). Then, the new models are
+\begin{align}
+  \logit\big(\E(Y | Z, \hat{Y}_c)\big) & = Z \tau + \logit(\hat{Y}_c),\label{p3:eq:gurm_2log}\\
+  \logit\big(\E(Y | Z\lambda, \hat{Y}_c)\big) & = (Z \lambda) \tau + \logit(\hat{Y}_c).\label{p3:eq:gurm_2lin}
+\end{align}
+
+We compare model fits, following our advice from Section \ref{p3:simulations:results} and using the estimated risk function based on logistic loss as
+the selection criteria. The results are shown in Table \ref{p3:tab:gurm}. Therefore there is evidence that the treatment effect may be better served
+by linearity on the probability scale.
+
+<<echo=FALSE, results="asis">>=
+source("code/gurm.R")
+
+s <- data.frame(gurm.save[1], gurm.save[2])
+rownames(s) <- "Estimated Risk"
+colnames(s) <- c("(\\ref{p3:eq:gurm_2log})", "(\\ref{p3:eq:gurm_2lin})")
+print(xtable(s,
+             caption = c("Estimated risk based upon logistic loss for model (\\ref{p3:eq:gurm_2log}) versus (\\ref{p3:eq:gurm_2lin}). The estimated
+             risk is lower for the second model, suggesting that the treatment effect might be better modeled with a linear effect in probability.",
+             "Estimated risk in models testing if treatment effect may be linear in probability"),
+             label = "p3:tab:gurm",
+             digits = 4,
+             align = c("l","c","c")),
+      comment = FALSE,
+      sanitize.text.function=function(x){x})
+@
+
+\subsection{Two-stage model}
+\label{p3:gurm:twostage}
+
+Now that we have evidence that the effect of treatment may be well fit as linear on the probability scale, we will use the suggestions of Section
+\ref{p3:strata:weights}.
+
+Continuing with the first stage model (\ref{p3:eq:gurm_1}), we fit a linear second stage model,
+\begin{equation}
+  \E\left(Y \middle| Z, \hat{Y}_c\right) = Z \tau + \hat{Y}_c,
+  \label{p3:eq:gurm_2linear}
+\end{equation}
+computing the standard error as described in (\ref{p3:eq:strata:se}). We have that \(\hat{\tau}\) = \Sexpr{round(gurm.save[3], 4)} with standard error
+\Sexpr{round(gurm.save[4], 4)}. This is no longer significant. Further study could examine whether this approach lacks power compared to the
+conditional logistic model.

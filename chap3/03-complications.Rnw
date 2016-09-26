@@ -1,0 +1,61 @@
+We now show the implementation of two additional complications. First, we will allow the first stage to be a generalized linear model. Secondly, we
+will allow handling clustered random trials.
+
+\subsection{PBPH with GLM First Stage}
+\label{p2:complication:glm}
+
+If we do not assume that the error on a response variable is normally distributed, a linear model may not be appropriate. Generalized linear models
+(GLM), which allow the error to have any exponential family distribution, may be more appropriate. If the user specifies that the first stage model is
+a GLM, the second stage remains linear. If \(Y\) is drawn from a particular distribution, there is no reason to assume that \(Y - \hat{Y}_c\) needs to
+also follow the same distribution. By using a linear second stage, we are examining whether the treatment effect is additive. Additionally, there is a
+practical consideration. Consider the situation where \(Y\) is binary. Despite \(Y\) being binary, \(\hat{Y}_c\) would almost surely not be, so
+\(Y - \hat{Y}_c\) would no longer even be discrete.
+
+For the full derivation, see Appendix \ref{p2:glm}. While the derivation should hold for any GLM with a canonical link, the implementation only allows
+for a binomial or Poisson first stage model at this time.
+
+The general implementation does not differ; the calculation of the bread includes a term for the estimated variance of each observation, so that the
+calculation of the bread is
+
+<<eval=FALSE>>=
+crossprod(x, x * vhat)
+@
+\noindent where \texttt{vhat} is a vector of estimated variances.
+
+\subsection{Clustered Standard Errors}
+\label{p2:complication:clusters}
+
+Randomization can be performed across clusters instead of individuals. When individual randomizing is infeasible, it may be more useful to randomize
+by group instead. The target population is divided into mutually exclusive groups. Typically, these groups have some natural definition, such as
+blocks, schools, cities, etc.\citep{lohr2009sampling}
+
+The convenience of clustered random trials is balanced with a loss in precision and power in a cluster experiment compared to simple random assignment
+with the same number of individuals.\citep{cochran1977sampling} Members within clusters are likely to be more homogeneous than those across clusters,
+introducing an intracluster correlation. Because of this intracluster correlation, the effective sample size of a set of clustered data is diminished,
+yielding underestimated standard errors.\citep{galbraith2010study}
+
+We do not consider any cluster-level effects, only allowing for the adjustment needed for intracluster correlation.
+
+Sandwich estimators are a common tool to handle the standard errors in clustered data situations. The calculations of the meat are modified to first
+sum the estimating functions within each cluster before taking across-cluster variation.\citep{cameron2010robust} To see the full derivation, see
+Appendix \ref{p2:clusters}.
+
+We implement this by overloading the \texttt{meat} function from the \textbf{sandwich} to allow a \texttt{cluster} argument. The relevant
+modifications\footnote{\texttt{sandwich} is also modified to pass the \texttt{cluster} argument down to \texttt{meat}.} are
+
+<<eval = FALSE>>=
+psi <- sandwich::estfun(x)
+if (!is.null(cluster)) {
+  psi <- aggregate(psi, by = list(cluster), FUN = sum)
+}
+@
+
+Additionally, there is need for a finite sample adjustment of the form
+\begin{equation}
+  \frac{S}{S-1}\cdot\frac{n-1}{n-p},
+  \label{p2:eq:fpc}
+\end{equation}
+where \(S\) is the number of clusters, \(n\) is the number of observations and \(p\) is the number of parameters in the
+model.\citep{cameron2010robust} If \(S = n\), where each observation is its own cluster, this is equivalent to not using a clustered sampling
+method. Then (\ref{p2:eq:fpc}) collapses to \(\frac{n}{n-p}\), which is a common degree of freedom adjustment in regression settings
+\citep{mackinnon1985some} and the default in \textbf{sandwich} \citep{zeileis2006object}.

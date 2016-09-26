@@ -1,0 +1,93 @@
+To call the main function of the \textbf{pbph} package, \texttt{pbph}, the first stage model must be fit by the user. This is fit using built-in
+\textit{R} functionality, usually the \texttt{lm} function (see Section \ref{p2:complication:glm} for the ability to fit the first stage via
+\texttt{glm}) and should only be fit on control group members. One of the benefits of the PBPH method is separating the goal of predicting the
+response in the absence of treatment from the goal of estimating any treatment effects. By enabling users to generate their first stage model fit
+externally, we allow them to create a model with a sole goal, rather than attempting to simultaneously also capture the treatment effect. Time and
+care should be taken at this step, as the stronger the first stage model fit, the more likely that the second stage model will be informative. See
+Section \ref{p1:simulations:infci} which examines the existence of infinite confidence intervals in the presence of poor first stage model fit.
+
+The function \texttt{pbph} takes in three arguments. The first is the first stage model fit as described. The additional arguments are a
+\texttt{data.frame} containing the data, and a treatment indicator (either a variable name inside the data or a \texttt{vector} of the same number of
+rows as the data) which assigns a \texttt{1} to each member of the treatment group and a \texttt{0} to each member of the control group. \texttt{pbph}
+follows other methodology which are elaborations on ordinary least squares, as implemented via \texttt{lm}. Some of these elaborations use \texttt{lm}
+explicitly by extending the \texttt{lm} class, such as \texttt{glm} from \textbf{stats} for generalized linear models \citep{R-base} or \texttt{ols}
+from \textbf{rms} for saving design elements from a linear model \citep{rms-package}. Others could be called spiritual successors to \texttt{lm} as
+while they don't extend \texttt{lm}, their input and output function similar to \texttt{lm}, such as \texttt{lmer} from \textbf{lme4} for mixed models
+\citep{lme4-package}, \texttt{coxph} from \textbf{survival} for Cox regression \citep{survival-package} or \texttt{tsls} for two-stage instrumental
+variable regression from \textbf{sem} \citep{sem-package}.
+
+\texttt{pbph} itself is a very simple function. It generates the second stage model and saves it as an object of class \texttt{pbph}, which contains
+\texttt{lm} as described above. It returns the \texttt{pbph} object which contains a few additional pieces of information which are used in
+calculating standard errors, performing hypothesis tests and generating confidence intervals.
+
+Further following along with \texttt{lm}, we do not generate the standard error yet. Instead,it is generated on demand, either when the user wishes to
+view it via \texttt{vcov} or when it is needed for calculations, for example in \texttt{summary} (which also performs a hypothesis test on each
+parameter) or \texttt{conf.int} to generate confidence intervals.
+
+\subsection{Standard Error Calculations and Hypothesis Testing}
+
+The standard error calculations utilize the existing \texttt{bread} and \texttt{meat} functionality from the \textbf{sandwich} package. Recall that we
+treat the bread and meat matrices as block matrices, each with four blocks. However, the off-diagonal blocks of the meat and the top right block of
+the bread were 0, leaving us with five pieces of bread and meat to calculate.
+
+Both diagonal pieces of the bread are very straightforward, merely the matrix multiplication of the transpose of the design matrix by itself. In
+\texttt{R}, this is represented by
+
+<<eval = FALSE>>=
+crossprod(x)
+@
+
+For \(B_{11}\), the bread corresponding to the first stage model, \texttt{x} is \(X\), the covariates, with the first column of \(\mathbf{1}\). In
+\(B_{22}\), the bread corresponding to the second stage, \texttt{x} is \((\mathbf{1\;X\beta_c})\), a column for intercepts and a column for the
+predicted response to control.
+
+Similarly, the blocks of the meat are straightforward, requiring only the extra step of first generating the estimating function for the data, which
+is done using the \texttt{estfun} function of \textbf{sandwich}, prior to performing the matrix multiplication,
+
+<<eval = FALSE>>=
+crossprod(estfun(x))
+@
+
+The remaining off-diagonal block of the bread requires more attention, both because its calculation is not as clean and because it has a dependency on
+\(\eta\). As a result, the diagonal blocks need be computed only once, but the off-diagonal bread block varies with \(\eta_0\). To calculate the
+hypothesis test of \(H_0: \eta = 0\), only that null needs to be tested, but as seen below, multiple versions of this bread block will be created when
+generating a confidence interval.
+
+For the hypothesis test of \(H_0: \eta = 0\), it is sufficient to generate a test statistic
+\begin{equation}
+  \frac{\hat{\eta}}{\sigma(\hat{\eta})}
+\end{equation}
+by the ratio of \(\hat{\eta}\) and its standard error. As in typical OLS settings, it will be a t-statistic, using the degrees of freedom from the
+first stage model.
+
+The same procedure is used for the intercept, interpretable as the average treatment effect when \(X\) is at its mean.
+
+\subsection{Confidence Intervals}
+
+The confidence region will be generated by test inversion, where we iterate over a range of \(H_0: \eta = \eta_0\), and the confidence region is the
+set of all \(\eta_0\) such that the hypothesis fails to reject. The test statistic used is
+\begin{equation}
+  t(\hat{\eta}) = \frac{|\hat{\eta} - \eta_0|}{\sigma(\hat{\eta})},
+\end{equation}
+rejecting \(H_0\) when
+\begin{equation}
+  t(\hat{\eta}) \geq t^*_{1 - \alpha/2}.
+\end{equation}
+
+By squaring both sides and re-arranging, we obtain an expression which is quadratic in \(\hat{\eta}\).
+
+This gives us two benefits. First, rather than iterating over a range of hypotheses, we can test three arbitrary hypotheses, use them to generate the
+coefficients of the quadratic curve, and solve the quadratic equation to obtain the bounds of the confidence region.
+
+Secondly, once we obtain the coefficients of the quadratic, we can easily determine the shape and minimum/maximum of the curve. If the curve is
+convex, we know the confidence interval must be finite. If the curve is concave and its maximum is positive, the confidence region is disjointly
+infinite. If the curve is concave and its maximum negative, the confidence region is infinite.\footnote{We showed in Section
+  \ref{p1:calculation:testinversion} that a convex curve with positive minimum, corresponding to an empty rejection region, is not obtainable.}
+
+Confidence intervals are obtained by passing a \texttt{pbph} object (the result of a call to \texttt{pbph}) to \texttt{confint}. It extends
+\texttt{confint.lm} in input and output.
+
+In Section \ref{p1:methodsummary}, we recommend only considering the confidence interval if the hypothesis test rejects the null. If the hypothesis
+test in the \texttt{pbph} failed to reject, \texttt{confint} returns \texttt{(NA, NA)}. This can be overridden by passing \texttt{forceDisplayConfInt
+  = TRUE}. If the confidence interval is disjoint, or if \texttt{returnShape = TRUE} is passed as an argument, than an additional attribute,
+\texttt{shape}, is returned taking values of either \texttt{finite}, \texttt{infinite} or \texttt{disjoint}.

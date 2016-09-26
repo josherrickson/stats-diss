@@ -1,0 +1,27 @@
+In Chapter \ref{chap2}, we introduced the Peters-Belson with Prognostic Heterogeneity method. The PBPH method addresses whether an intervention is
+most effective amongst those who are most likely to have a negative response in the absence of the intervention. The PBPH method is a two-stage
+modification of the Peters-Belson method. The first stage predicts the response in the absence of treatment using only control group members; the
+second stage models the treatment effect as the sum of a main effect and an additional effect due to the interaction of the treatment indicator and
+the predicted response from the first stage. As is common with two-stage regression procedures, the standard error associated with the estimated
+coefficients in the second stage has to account for the measurement error inherent in using a predicted response from the first stage, which we
+addressed with the use of a sandwich estimator based upon estimating equations. Following this, we showed the need to generate a confidence region via
+test inversion, as a Wald-style confidence interval produced undercoverage.
+
+We introduce the \textbf{pbph} package implemented in \textit{R}\citep{R-base}. The package focuses on implementing the second stage, allowing users
+freedom to create the first stage as desired. We extend the implementation of Sandwich estimators found in the \textbf{sandwich}
+package\citep{zeileis2004econometric} to easily generate correct standard errors. Additionally, we efficiently implement the generation of the
+confidence region by test inversion, not requiring iterating over all possible values of the null hypothesis.
+
+We allow two further complications to the method which the practicing statistician is likely to encounter.
+
+First, in the previous chapter, the relationship between the response variable \(Y\) and its predictors was considered to be linear, and the error in
+the model assumed normal. This led to both stages being fit with linear regression. If \(Y\) were for example binary, we would prefer the first stage
+to be logistic. We extend our method to allow this modification by allowing the first stage to be fit with a generalized linear model. The
+\textbf{sandwich} package which we extend is generalized to many variations of model, simplifying this stage.\citep{zeileis2006object}
+
+Secondly, clustered random trials can be used in place of simple random assignment. For example, consider a population of students at a particular
+school; each class could be a cluster. Common clusters amongst larger populations include census tracts or congressional districts. In clustered
+random sampling, treatment is assigned at the cluster level instead of the individual level.  However, this form of clustering introduces correlation
+amongst observations, as units within a cluster are typically more alike than units across clusters.\citep{galbraith2010study} The traditional method
+of dealing with clustered standard errors is sandwich estimators.\citep{cameron2010robust} We overload the \texttt{meat} and \texttt{sandwich}
+functions from the \textbf{sandwich} package to accept an argument identifying clusters.

@@ -1,0 +1,176 @@
+Due to the issues we have identified, traditional methods for testing the coefficient on the interaction term in the PBPH method will not be
+sufficient. Specifically, the standard regression estimates of the variance of the coefficient will underestimate the truth, so we will turn instead
+to a robust sandwich estimator generated from estimating equations.
+
+When we consider hypothesis testing, we will need to create an estimator for the covariance we have defined. There are several choices of such
+estimators, and we will describe the choices.
+
+Finally, Wald-type confidence intervals will obtain incorrect coverage for the estimate of the interaction term. (See Appendix \ref{p1:appendix:wald}
+for details.) Generating a confidence region by test inversion instead allows us to obtain proper coverage.
+
+\subsection{M-estimators}
+\label{p1:methodology:mest}
+
+M-estimators are a wide class of estimators which are useful in derivations of robust statistics. Each M-estimator is the solution to an estimating
+equation, namely \(\hat{\theta}\) is an M-estimator for \(\theta\) if \(\hat{\theta}\) solves
+\begin{equation}
+  0 = \sum_{i=1}^n \phi_i(X_i, \theta),
+  \label{p1:eq:ee}
+\end{equation}
+where \(X\) are some independent data and \(\phi\) are known functions. Commonly, the right hand side is scaled by \(n\) to direct the conversation
+towards a mean and to ease some derivations, though consideration of sums helps our derivation.
+
+We can place many common estimators into the M-estimation framework. For example, setting \(\phi_i(X_i, \mu) = X_i - \mu\), it is easy to see that
+\(\overline{X}\) solves \(\sum_i \phi_i(X_i, \mu) = 0\), and thus the sample mean is an M-estimator. The benefit of reframing estimators in this
+fashion is that it allows for more general asymptotic methods, as it can be shown under regularity conditions that M-estimators are asymptotically
+normal and consistent (when the error distribution is symmetric).\citep{stefanski2002calculus}
+
+We sketch a brief outline of the derivation of the asymptotic distribution of an M-estimator. There are many sources include the full derivation and
+proof such as \citet{stefanski2002calculus}.
+
+By Taylor expansion, the estimating equation (\ref{p1:eq:ee}) can be rewritten as
+\begin{equation}
+  0 \approx \sum_i \phi_i(X_i, \theta) + \left(\sum_i \pderiv{\theta}
+    \phi_i(X_i, \theta)\right)(\hat{\theta} - \theta).
+  \label{p1:eq:eederiv}
+\end{equation}
+
+In the limit, the remaining terms go to zero, provided certain conditions are satisfied. \citet{stefanski2002calculus} suggest a non-rigid version of
+these conditions: \(\phi_i\) must be smooth and as \(n\to\infty\), \(\theta \not\to\infty\). For a more rigorous treatment of the conditions, see
+\citet{huber1967behavior} or \citet{serfling2009approximation}.
+
+Rearranging and in the limit,
+\begin{equation}
+  \sqrt{n}(\hat{\theta} - \theta) = {\underbrace{\left(\sum_i \pderiv{\theta} \phi_i(X_i, \theta)\right)}_{(*)}}^{-1}\underbrace{\sqrt{n}\sum_i
+    \phi_i(X_i, \theta)}_{(**)}.
+  \label{p1:eq:eederiv2}
+\end{equation}
+
+When \(\theta = \theta_0\), where \(\theta_0\) is the true population parameter, \((**)\) converges to normality with mean 0 and variance
+\(\E\left[\phi(X_i, \theta_0)\phi(X_i, \theta_0)'\right]\). Call that variance the ``meat,'' \(M(\theta_0)\), which is the second non-central moment
+of the estimating equation, and is equivalent to the variance because the first moment is zero when \(\theta = \theta_0\) by definition. Call \((*)\)
+the ``bread,'' \(B(\theta_0)\), which is the derivative of the estimating equation. Then, it follows from Slutsky's theorem that \(\hat{\theta}\) is
+normal with expectation \(\theta_0\) and variance \(B(\theta_0)^{-1}M(\theta_0)B(\theta_0)^{-T}\).\citep{stefanski2002calculus, carroll2006measurement}
+
+The bread is estimated by
+\begin{equation}
+  B_n(\hat{\theta}) = n^{-1}\sum_i \pderiv{\theta} \phi_i(X_i, \hat{\theta}),
+  \label{p1:eq:est-meth-mest-breadest}
+\end{equation}
+and the meat by
+\begin{equation}
+  M_n(\hat{\theta}) = n^{-1}\sum_i\phi(X_i, \hat{\theta})\phi(X_i, \hat{\theta})',
+  \label{p1:eq:est-meth-mest-meatest}
+\end{equation}
+where \(B_n(\hat{\theta})^{-1}M_n(\hat{\theta})B_n(\hat{\theta})^{-T}\) converges in probability to \(B(\theta_0)^{-1}M(\theta_0)B(\theta_0)^{-T}\)
+under regularity conditions.\citep{iverson1989effects}
+
+The sandwich estimator is a robust estimator, in the sense that consistency holds without any assumptions of distributions and even when the model is
+misspecified. However, when the model is correctly specified, the sandwich estimate is a very inefficient estimator.\citep{carroll1998sandwich}
+
+\subsubsection{Stacked Estimating Equations}
+\label{p1:methodology:mest:stacked}
+
+One limitation of classic sandwich estimators is the assumption that each \(\phi_i\) has the same form. By using stacked estimating equation, we can
+bypass that limitation. This naturally arises in settings where an external data set estimates a parameter used in a model on another data set. In
+this case, it is not appropriate to discard the variation in the estimate of the parameter from the external data set.
+
+To make the notion of stacked estimating equations concrete, let us assume that our model of interest has data \(X\) with parameter \(\theta\), and
+that parameter \(\beta\) comes from an external data set \(Y\), so that our current model has dependencies on both \(\theta\) and \(\beta\), but the
+model on the external data only depends on \(\beta\). In addition to \(\phi_i(X_i, \theta, \beta)\), we can define an additional set of estimating
+equations, \(\psi_j(Y_j, \beta)\). Then, our M-estimators \((\hat{\theta}, \hat{\beta})\) are the solutions to
+\begin{equation}
+  \left(
+    \begin{array}{c}
+      0 \\
+      0
+    \end{array}
+  \right) = \left(
+    \begin{array}{c}
+      \sum_j \psi_j(Y_j, \beta) \\
+      \sum_i \phi_i(X_i, \theta, \beta) \\
+    \end{array}
+  \right).
+  \label{p1:eq:eestacked}
+\end{equation}
+
+While the algebra becomes considerably more tedious, by setting up the bread and meat as blocked matrices, the derivation of the sandwich estimator is
+straightforward.
+
+\subsection{Estimating Covariance in Hypothesis Tests}
+\label{p1:methodology:test}
+
+The covariance matrix generated from the use of M-estimators is complex and careful consideration needs to be given to its estimation. Following the
+terminology and descriptions from \citet{lindsay2003inference}, we will mention three variations. Previously, in Section \ref{p1:methodology:mest}, we
+described (implicitly) two of these variations.
+
+First, a model-based version of the covariance,
+\begin{equation}
+  B(\theta_0)^{-1}M(\theta_0)B(\theta_0)^{-T},
+  \label{p1:eq:est-meth-test-model}
+\end{equation}
+under the null hypothesis. This of course is only valid if the null hypothesis is correct, but minimizes additional sources of
+variation.\citep{lindsay2003inference}
+
+Secondly, we have a fully empirical estimate, using (\ref{p1:eq:est-meth-mest-breadest}) and (\ref{p1:eq:est-meth-mest-meatest}), obtaining
+\begin{equation}
+  B_n(\hat{\theta})^{-1}M_n(\hat{\theta})B_n(\hat{\theta})^{-T}.
+  \label{p1:eq:est-meth-test-empirical}
+\end{equation}
+
+As mentioned above, with regularity conditions, we have that (\ref{p1:eq:est-meth-test-model}) converges to
+(\ref{p1:eq:est-meth-test-empirical}).\citep{iverson1989effects}
+
+Finally, we can use a hybrid of the model-based and empirical versions. In \citet{lindsay2003inference}, the variation used is a linear combination of
+the model-based and empirical estimators, e.g, if \(C_0\) is the model-based version and \(\hat{C}\) the empirical, a class of hybrids \(\hat{C}_0\)
+is defined as
+\begin{equation}
+  \hat{C}_0 = (1-\alpha)C_0 + \alpha\hat{C},
+\end{equation}
+for \(\alpha \in (0,1)\).
+
+For sandwich estimators, an alternate form of the hybrid estimator can be defined in a simpler manner, by independently allowing the estimation of the
+bread and the meat by their respective model-based or empirical estimators. This leads to two alternative estimators,
+\begin{equation}
+  B_n(\hat{\theta})^{-1}M(\theta_0)B_n(\hat{\theta})^{-T},
+  \label{p1:eq:est-meth-test-hybrid1}
+\end{equation}
+\begin{equation}
+  B(\theta_0)^{-1}M_n(\hat{\theta})B(\theta_0)^{-T}.
+  \label{p1:eq:est-meth-test-hybrid2}
+\end{equation}
+
+We will seek guidance from simulations to compare the forms of the estimates.
+
+\subsection{Confidence Region by Test Inversion}
+\label{p1:methodology:inversion}
+
+The method is straightforward and based upon the duality of hypothesis testing and confidence intervals. If there is some test statistic \(t(\theta)\)
+which at level \(\alpha\) tests the hypothesis \(H_0: \theta = \theta_0\), rejecting when \(t(\theta) > c^*\) where \(c^*\) is a critical value
+corresponding to the limiting distribution of \(t(\theta_0)\), then a corresponding \((1-\alpha)\%\) confidence region for \(\theta\) is
+\begin{equation}
+  \left\{\theta : t(\theta) < c^*\right\}.
+\end{equation}
+
+In general, the confidence region generated by test inversion need not be a continuous interval, but it often is.
+
+Inverting a Wald test gives a Wald confidence interval. Let
+\begin{equation}
+  t_W(\theta) = \frac{\hat{\theta} - \theta_0}{\sigma(\hat{\theta})},
+\end{equation}
+
+where \(\sigma(\hat{\theta})\) is the sample standard deviation.  Rejecting when \(t_W(\theta) > z^*_\alpha\), we can directly solve for \(\theta_0\),
+obtaining the traditional confidence interval of
+\begin{equation}
+  \hat{\theta} \pm z^*_\alpha \sigma(\hat{\theta}).
+  \label{p1:eq:meth-inv-waldci}
+\end{equation}
+However, consider a score test, with a test statistic of the form
+\begin{equation}
+  t_S(\theta) = \frac{\hat{\theta_0} - \theta}{\sigma(\theta_0)},
+  \label{p1:eq:score-test}
+\end{equation}
+where the standard deviation is based upon \(\theta_0\), instead of \(\hat{\theta}\). For tests of this form, it is not guaranteed that the test is
+invertible cleanly such that the confidence region will have a closed form solution. If such a closed form solution exists, it may not have the
+interpretability that (\ref{p1:eq:meth-inv-waldci}) has. More generally, we can iterate over possible values of \(\theta_0\), and define the
+confidence region as all values of \(\theta_0\) for which (\ref{p1:eq:score-test}) fails to reject.\citep{agresti2011score}

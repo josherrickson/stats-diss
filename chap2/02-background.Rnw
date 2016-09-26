@@ -1,0 +1,92 @@
+A brief introduction into causal inference will benefit later understanding. Additionally, the historical development of the Peters-Belson method
+allows us to understand the current motivation to use the PBPH method. Finally, we look at other approaches to addressing the issues we raise.
+
+\subsection{Causal Framework}
+\label{p1:background:causal}
+
+The notion of causal inference and potential responses has a long history, but its modern interpretation starts with \citet{rubin1975estimating}. At
+the heart of any causal problem is the desire to answer the question ``What response would we observe if the treatment of interest were applied versus
+if the treatment of interest were not applied?''
+
+Let \(Z_i\) be a binary indicator of the intervention which individual \(i\) received, convention being that \(Z_i = 0\) for those receiving the
+control and \(Z_i = 1\) for those receiving the treatment. (For notation in this document, we will often use \(c\) and \(t\) instead of \(0\) and
+\(1\) respectively in indices for clarity.)  Letting \(Y_{iz}\) be the response that individual \(i\) experienced upon receiving \(z\), we want to
+gain insight into \(Y_{it} - Y_{ic}\) for each individual \(i\), called the treatment effect. This would be the end of inquiry since, barring
+idealized experimental designs, we only observe \(Y_{i} = Y_{it}Z_i + Y_{ic}(1 - Z_{i})\). This is the Fundamental Problem of Causal
+Inference.\citep{holland1986statistics} \(Y_{it}\) and \(Y_{ic}\) are known as potential responses; formally, \(Y_{iz}\) is the potential response of
+individual \(i\) had they received \(z\).
+
+There have been many methods proposed to bypass this issue, two of the most common being the average treatment effect (ATE) and the effect of
+treatment on the treated (ETT). Put simply, ATE is \(\E(Y_{t} - Y_{c})\), the population difference in mean response of the treatment group vs the
+control group. ETT is \(\E(Y_{t} - Y_{c} | Z = 1)\), restricting that difference to the treatment group. Note that the ATE requires estimating both
+\(\E(Y_{t})\) and \(\E(Y_{c})\), whereas when we restrict attention to the treatment group in the ETT, we have that \(\E(Y_{t} | Z=1) = Y\) and only
+need to estimate \(\E(Y_{c} | Z = 1)\). The Peters-Belson method described below upon which our we based our work is aiming more towards the ETT than
+the ATE.
+
+Causal inference enjoys a rich and deep literature, but this background should be sufficient at the moment for the problems at hand. For further
+details, see for example \citet{pearl2016causal} or \citet{imbens2015causal}.
+\subsection{Peters-Belson Method}
+\label{p1:background:petersbelson}
+
+A natural estimate of the ETT is \(Y_t - \hat{Y}_c\) amongst the treatment group. If we have confidence in \(\hat{Y}_c\) as an estimate for \(Y_c\),
+then we have confidence in the estimate of the treatment effect. Peters and Belson introduced a technique, now known as the Peters-Belson method, to
+obtain \(\hat{Y}_c\) in two independent papers. The goal of \citet{peters1941method} was to introduce an alternative to pair matching that didn't have
+data loss to the same degree.\footnote{This was prior to the introduction of full matching, which has improvements over pair matching, including
+  addressing the data loss.}  To do so, he used the control group data to fit a predictive model for the response, and then used that model to predict
+the responses of the treatment group data (i.e. predict \(Y_{ic}, \{i : Z_i = 1\}\) using a model fit upon observations \(\{i : Z_i = 0\}\)). His
+novel claim was that these predicted responses were the response that the treatment group would have had were the treatment to have no effect, an idea
+that no doubt informed Rubin's later work. This can be followed by a trivial (Peters even thought so, as ``if one uses a calculating machine, it moves
+very rapidly.''  \citep[pp. 609]{peters1941method}) test of differences between the average predicted and average observed response such as ANOVA.
+
+\citet{belson1956technique} had a similar goal as Peters, but his work included a bit more rigor. Specifically, his concern was the correlation
+between treatment status, \(Z_i\), and covariates, \(X_i \in \R^p\). The paper spends considerable time finding ``stable correlates'' in the data,
+covariates correlated to the response but unaffected by treatment status. These stable correlates would offer a strong predictive model of the
+response, and it is reasonable to assume they are balanced between the control and treatment groups. Belson found these stable correlates manually, a
+task which is no longer necessary due to increased computational power and continued work in the area of covariate balance.
+
+\citet{cochran1969use} examined the Peters-Belson method in to determine when to use it over using some pooling method from the entire
+sample. Let \(\hat{\beta}_c \in \R^p\) be the estimate of the coefficients on \(X\) from a predictive model fit from only the control group and
+\(\hat{\beta}_t \in \R^p\) correspondingly from only the treatment group. Let \(\hat{\beta} \in \R^p\) be the estimate using the entire sample. (\(X\)
+should not include the treatment indicator \(Z\).)  Cochran concludes that the only time it is not recommended to use \(\hat{\beta}_c\) over
+\(\hat{\beta}\) to obtain \(\hat{Y}_c\) is when \(\hat{\beta}_c\) and \(\hat{\beta_t}\) are statistically indistinguishable and \(\overline{X}_c\) and
+\(\overline{X}_t\) are substantively different. In all other settings, notably anytime \(\hat{\beta}_c\) and \(\hat{\beta}_t\) are statistically
+significantly different which likely covers most data sets, the Peters-Belson estimate is recommended.
+
+Similar methods have been discussed in the economics literature and are known as Oaxaca-Blinder methods, see \citet{oaxaca1973mfw} or
+\citet{blinder1973wdr}.
+
+\subsection{Existing Approaches}
+\label{p1:background:other}
+
+There have been two general approaches in the literature to adjusting the PBPH method to account for the variation introduced from the first
+stage. The first uses computational methods and the second uses an out-of-sample alternative data set. We review both methods here and explain their
+limitations.
+
+\subsubsection{Computational Approach}
+\label{p1:background:other:abadie}
+
+This approach was identified in \citet{abadie2013endogenous}. The authors acknowledge the issues with current methods, and convincingly demonstrate
+their problems. After discarding the treatment group data from their motivational data sets, they perform a simulation by splitting the control group
+data into a faux treatment and faux control group. In this setting, the true treatment effect is zero, and thus there should be no ability to make any
+claim regarding the benefit of the treatment on those with the lowest predicted response. However, after performing the analysis using terciles based
+upon the predicted outcome, the results show that the ``treatment'' is beneficial to those at highest risk and harmful to those at the lowest risk.
+
+The authors suggest using some variant of cross-validation to correctly obtain proper coverage. Averaging over many repetitions, the authors find that
+either the leave-one-out or sample splitting variations of cross-validation yield estimators which obtain proper coverage.
+
+However, these approaches introduce a computational complexity to a problem where none previously exists. While in most moderate sample size settings,
+any modern computer will be able to easily handle this approach, for larger samples, as with any bootstrap-based method, the computation time can
+easily transform from a minor nuisance into a major hindrance.
+
+\subsubsection{Out-of-Sample Approach}
+\label{p1:background:other:hayward}
+
+Another source of papers using this method are found in the medical literature. \citet{hayward2006multivariable} show that this two-stage approach to
+subgroup analysis has higher power as compared to traditional single variable sub-grouping. However, the authors also recognize the potential for the
+issues we discuss in this chapter, and recommended an out-of-sample solution, requiring that the first stage modeling of the predicted response be
+based upon an external data set or historical information. This is similar in concept to the sample splitting method of \citet{abadie2013endogenous}
+in that independent stages corrects the coverage.
+
+Of course, in most situations, no such other data set or historical data exists to enable the independent modeling of the stages. If data do exist, it
+will require the often strong assumption that both data sets are from the same population. This assumption is a tempting one for researchers to make
+were this solution their only possible course of action.

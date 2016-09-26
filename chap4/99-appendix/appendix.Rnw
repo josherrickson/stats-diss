@@ -1,0 +1,56 @@
+\section{Derivation of regression coefficients}
+\label{p3:appendix:coefs}
+
+\subsection{Unweighted}
+\label{p3:appendix:coefs_ols}
+
+Let \(Y_i \in \R\) and \(Z_i \in \{0,1\}\) be the observed response and treatment status of individual \(i\). Let \(Y_{ic}\) be the potential response
+of individual \(i\) under control.
+
+The model of interest, without weights, is
+\begin{equation}
+  \E(Y | Z, Y_c) = \beta Z + Y_c.
+\end{equation}
+
+We have that
+\begin{equation}
+  \hat{\beta} = \frac{\sum_i Z_i(Y_i - Y_{ic}) - n^{-1}\sum_i Z_i\sum_i (Y_i - Y_{ic})}{\sum_i Z_i^2 - n^{-1}\sum_i Z_i\sum_i Z_i}.
+\end{equation}
+
+Now \(Z_i^2 = Z_i\) and \(\sum_i (Y_i - Y_{ic}) = \sum_i Z_i(Y_i - Y_{ic}) + \sum_i (1 - Z_i)(Y_i - Y_{ic})\). In the control group, the observed
+response is the potential response to control, so \(\sum_i (1 - Z_i)(Y_i - Y_{ic})\) = 0. Therefore,
+\begin{align}
+  &= \frac{\sum_i Z(Y_i - Y_{ic)} - n^{-1}\sum_i Z_i \sum_i Z_i(Y_i - Y_{ic})}{\sum_i Z_i\left(1 - n^{-1}\sum_i Z_i\right)}\\
+  &= \frac{\sum_i Z_i(Y_i - Y_{ic})(1 - n^{-1}\sum_i Z_i)}{\sum_i Z_i(1 - n^{-1}\sum_i Z_i)}\\
+  &= \frac{\sum_i Z_i(Y_i - Y_{ic})}{\sum_i Z_i}.\label{p3:eq:betahat}
+\end{align}
+
+\(\hat{\beta}\) is the average of \(Y - Y_c\) amongst the treatment group, or the estimated effect of the treatment on the treated.
+
+\subsection{Weights}
+\label{p3:appendix:coefs_wls}
+
+Now, let \(w_i\) be the weight applied to individual \(i\). Many of the same calculations and maneuvers carry over. The end result is that
+\begin{equation}
+  \hat{\beta}_w = \frac{\sum_i w_iZ_i(Y_i - Y_{ic})}{\sum_i Z_iw_i}.
+\end{equation}
+
+\(\hat{\beta}_w\) is the weighted average of \(Y - Y_c\) amongst the treated.
+
+\section{Estimating Equation for Weighted Least Squares}
+\label{p3:appendix:ee_wls}
+
+In OLS, we assume the variance is homoscedastic, that is, \(\var_{\textrm{ols}}(\epsilon) = \sigma^2 \mathbf{I}\). Generalized least squares extends
+this to allow \(\var_{\textrm{gls}}(\epsilon) = \Sigma\), with the only restrictions being that \(\Sigma_{ii} > 0\) and
+\(\Sigma_{ij} = \Sigma_{ji}\).\citep{amemiya1985advanced} Weighted least squares is a special case of GLS where off-diagonals of \(\Sigma\) are 0,
+that is, \(\var_{\textrm{wls}} = \vec{\sigma}^2\mathbf{I}\) where \(\vec{\sigma} = (\sigma_1, \sigma_2, ..., \sigma_n)\).
+
+Let \(w_i = \sigma_i^{-2}\) so that log likelihood to minimize for weighted least squares can be rewritten as
+\begin{equation}
+  l(\beta | y_i) \propto \sum_i w_i(y_i - x_i\beta)^2,
+\end{equation}
+yielding estimating equations of
+\begin{equation}
+  \phi(y_i;\beta) = w_i(y_i - x_i\beta)x_i
+\end{equation}
+for observation \(i\).

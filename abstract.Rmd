@@ -1,0 +1,30 @@
+---
+title: "Two-stage Regression for Treatment Effect Estimation"
+author: "Josh Errickson"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+**Abstract:** Two-stage regression is a common tool for instrumental variable analysis in applied research. This dissertation introduces additional
+uses of two-stage models that enable researchers to make inferences that are unavailable in one-stage models.
+
+The first part of the dissertation explores recent methodology that examines whether the predicted response to control affects the magnitude of the
+treatment effect. The method is a two-stage variation of the Peters-Belson method, studying the interaction between the treatment effect and a
+prognostic score, i.e. an outcome regression that was fitted to control observations and then extrapolated into the treatment group. The dissertation
+expands this method into a two-stage regression method termed "Peters-Belson with Prognostic Heterogeneity" (PBPH), which addresses propagation of
+error from the first stage to the second. A non-standard construction based on stacked estimating equations tests hypotheses about the
+treatment-prognostic score interaction, deriving confidence intervals by inverting families of tests. These tests combine characteristics of Wald and
+generalized score tests, improving the small-sample coverage of a similar Wald method and the power of comparable generalized score tests.
+
+Following this, the dissertation enhances the PBPH methodology, addressing complications that the applied researcher may encounter.  The method is
+adapted to accommodate generalized linear models (as opposed to linear models only) at the first stage.  Further adaptations accommodate designs
+assigning study subjects to treatment conditions by cluster, such as cluster randomized trials.  A simulation study clarifies sample size
+requirements' dependency on the complexity of the first stage model, culminating in a theoretically motivated rule of thumb for the maximum number of
+first stage regressors as a function of n.
+
+The final chapter examines treatment effect estimation with a binary response. Simulations reveal that using two-stage regression models sheds light
+on whether a treatment effect is linear on the logit scale (logistic regression) or linear on the probability scale (linear regression). Often,
+matching is performed on observational data to aid in treatment effect estimation. Conditional logistic regression is a typical approach to matched
+data with binary response; however, we show that two-stage regression in this setting offers benefits not available to a one-stage conditional
+logistic model.

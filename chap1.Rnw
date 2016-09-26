@@ -1,0 +1,27 @@
+We consider two variations of two-stage regression used to fit models. Two-stage least squares has seen a lot of usage in statistics and econometrics
+in the context of instrumental variables. (Historically in e.g. \citet{wright1928tariff} and \citet{theil1958economic}, more recently in
+e.g. \citet{angrist1995two} and \citet{imbens2014instrumental}, and seeing applied use in e.g. \citet{burgess2013identifying},
+\citet{auger2014preschool}, \citet{asongu2012effect} and many others.) We consider more general contexts.
+
+When studying whether an intervention or other treatment has a significant effect on the response, a researcher may be further interested in whether
+those higher at risk of a negative response see more benefit from the intervention. For example, in \citet{gine2012credit}, the authors are studying
+biometric identification in rural Malawi, and studying whether its use in the credit system will increase the rate of loan repayment. Their results
+claim that the effect of biometric identification is the largest among those who are least likely to repay the loan in the absence of the
+intervention. We discuss this example further in Section \ref{p1:motivation:example}.
+
+The natural way of fitting such a model is a two-stage modification of the Peters-Belson method (see Section \ref{p1:background:petersbelson}). In the
+first stage, a prediction of the response in the absence of treatment is obtained. The second stage uses this prediction as a modification to the
+treatment effect, allowing the discovery of both the overall treatment effect as well as the additional effect due the predicted risk. Useful in
+randomized trials, or observational data which are similar to those produced from randomized trials, this method has the additional benefit of
+separating the relationship between the predictors and the response from the effect of treatment on the response. The method requires a strong first
+stage model fit, and if such a fit cannot be obtained, this method should not be applied. An alternative framework to consider this method would be in
+measurement error literature.\cite{carroll2006measurement} This enhanced Peters-Belson methodology is discussed in Chapters \ref{chap2} and
+\ref{chap3}.
+
+Consider instead a situation where the response is binary and we are examining the effect of some intervention. If there is a treatment effect, we may
+be interested whether the magnitude of the treatment effect on the probability of seeing a particular response depends on the probability of seeing
+the response in the absence of treatment. If the dependence is there, then logistic regression can fit the model. However, if there is no dependence,
+linear regression may be preferred. Usually when a response is binary, logistic regression is preferred over linear for a variety of valid
+reasons\cite{cox1989analysis}, thus not allowing this model to be tested. By using a two-stage regression, we can model the relationships between the
+response and the predictors and response and the treatment effect separately, to enable a linear relationship between treatment and response. This
+methodology is discussed in Chapter \ref{chap4}.

@@ -1,0 +1,96 @@
+\subsection{Clustered Standard Errors}
+\label{p2:clusters:general}
+
+We extend the estimating equation and M-estimator framework into the clustered setting. Each M-estimator is the solution to an estimating equation,
+namely \(\hat{\theta}\) is an M-estimator for \(\theta\) if \(\hat{\theta}\) solves
+\begin{equation}
+  0 = \sum_{i=1}^n \phi_i(D_i, \theta),
+  \label{p2:eq:ee_in_appendix}
+\end{equation}
+where \(D_i\) are some independent data and \(\phi_i\) are known functions. Now consider a set of \(n\) observations, where there are \(S\) clusters
+and \(n_s\) observations in cluster \(s\). We can re-write the estimating equation (\ref{p2:eq:ee_in_appendix}) as
+\begin{equation}
+  0 = \sum_{s=1}^S \left(\sum_{i=1}^{n_s} \phi_{si}(D_{si}; \theta)\right).
+\end{equation}
+
+If we consider a least squares regression setting, where \(Y_{si} = X_{si}\beta + \epsilon_{si}\), then we have that
+\begin{equation}
+  \phi_{si}(Y_{si}, X_{si}; \beta) = (Y_{si} - X_{si}\beta)X_{si}.
+  \label{p2:eq:test}
+\end{equation}
+
+The bread will be the derivative of this with respect to the parameter, so
+\begin{equation}
+  B(\beta) = \sum_{s=1}^S \left(\sum_{i=1}^{n_s} X_{si}\right) = \sum_{i=1}^n X_{i},
+\end{equation}
+which is identical to the non-clustered version. Clustering has no effect on the bread. However, in the meat, we do see an effect as
+\begin{equation}
+  M(\beta) = \sum_{s=1}^S \left(\sum_{i=1}^{n_s} (Y_{si} - X_{si}\beta)X_{si}\right)'\left(\sum_{i=1}^{n_s} (Y_{si} - X_{si}\beta)X_{si}\right).
+\end{equation}
+
+Computationally, we are able to compute the meat easily by first summing the estimating equation over each cluster.
+
+Finally, the above is asymptotically correct but often uses a finite sample adjustment. One often used adjustment is
+\begin{equation}
+  \frac{S}{S-1}\cdot\frac{n-1}{n-p},
+\end{equation}
+where \(p\) is the number of parameters, including intercept. This should be equivalent to the rank of the design matrix, assuming the design matrix
+is of full rank (equivalently that we can obtain estimates for all coefficients).\citep{cameron2010robust}
+
+\subsection{PBPH with Clustering}
+\label{p2:clusters:pbph}
+
+We can extend the PBPH method to allow clustering. As above, assume we have \(n\) observations, each belonging to one of \(S\) clusters, with \(n_s\)
+observations is cluster \(s\). Let \(S_0\) and \(S_1\) represent the set of clusters which were randomly assigned to control and treatment
+respectively. Otherwise, notation remains identical to the non-clustered variation.
+
+With these clusters, the stacked estimating equations to solve now become
+\begin{align}
+  \left(\mathbf{0}\middle) = \middle(
+      \begin{array}{l}
+        \displaystyle \sum_{s=1}^{S_0} \left( \sum_{i=1}^{n_s} \phi_i(Y_i; \beta_c) \right)\\
+        \displaystyle \sum_{s=1}^{S_1} \left( \sum_{i=1}^{n_s} \psi_i(Y_i, \beta_c; \tau, \eta) \right)
+      \end{array}
+      \right),
+\end{align}
+where as before, we have
+\begin{align}
+  \phi_i(Y_i; \beta_c) & = (Y_i - X_i'\beta_c)X_i,\\
+  \psi_i(Y_i, \beta_c; \tau, \eta) & = (Y_i - X_i'\beta_c - \tau - \eta X_i'\beta_c)\binom{1}{X_i'\beta_c}.
+\end{align}
+
+As mentioned in Appendix \ref{p2:clusters:general}, the bread matrix \(B\) will not be affected by this shift.
+
+For the meat, \(M\), we have that
+\begin{align}
+  M_{11} & = \var \left( \sum_{s=1}^{S_0} \left( \sum_{i=1}^{n_s} \phi_i(Y_i; \beta_c) \right)\right) \label{p2:eq:cluster_meat1}\\
+  & = \sum_{s=1}^{S_0} \left( \var \sum_{i=1}^{n_s} \phi_i(Y_i; \beta_c) \right) \label{p2:eq:cluster_meat2}\\
+  & = \sum_{s=1}^{S_0} \left( \sum_{i=1}^{n_s} \phi_i(Y_i; \beta_c) \right)'
+   \left( \sum_{i=1}^{n_s} \phi_i(Y_i; \beta_c) \right). \label{p2:eq:cluster_meat3}
+\end{align}
+
+The equality of (\ref{p2:eq:cluster_meat1}) to (\ref{p2:eq:cluster_meat2}) is due to observations being independent across clusters. The final
+equality to (\ref{p2:eq:cluster_meat3}) is due to the estimating equation having mean 0. A very similar form exists for \(M_{22}\),
+\begin{equation}
+  M_{22} = \sum_{s=1}^{S_1} \left( \sum_{i=1}^{n_s} \psi_i(Y_i, \beta_c; \tau, \eta) \right)'
+   \left( \sum_{i=1}^{n_s} \psi_i(Y_i, \beta_c; \tau, \eta) \right).
+\end{equation}
+
+We tweak the finite sample adjustment in (\ref{p2:eq:fpc}), yielding
+\begin{equation}
+  \frac{S_0}{S_0 - 1}\cdot\frac{n_c - 1}{n_c - p},
+  \label{p2:eq:fpc-control}
+\end{equation}
+for \(M_{11}\) and
+\begin{equation}
+  \frac{S_1}{S_1 - 1}\cdot\frac{n_t - 1}{n_t - 2},
+  \label{p2:eq:fpc-treatment}
+\end{equation}
+for \(M_{22}\). Here, \(n_t = \sum (1 - Z_i) = \sum_{s=1}^{S_0} n_s\) and \(n_t = \sum Z_i = \sum_{s=1}^{S_1} n_s\). Recall that in the second stage
+model, \(p=2\), hence the denominator in the second term of (\ref{p2:eq:fpc-treatment}). In terms of implementation, in the single stage version, the
+adjustment is multiplied to the final form of the covariance, \(B^{-1}MB^{-T}\). However, in our two stage version, we can rewrite
+(\ref{p2:eq:gen-correctedest}) with the scaling factors as as
+\begin{equation}
+  \frac{S_1}{S_1 - 1}\cdot\frac{n_t - 1}{n_t - 2}B_{22}^{-1}M_{22}B_{22}^{-T} +
+  \frac{S_0}{S_0 - 1}\cdot\frac{n_c - 1}{n_c - p}B_{22}^{-1}B_{21}B_{11}^{-1}M_{11}B_{11}^{-T}B_{21}^TB_{22}^{-T}.
+\end{equation}

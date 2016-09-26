@@ -1,0 +1,207 @@
+\section{Bias Correction}
+\label{p1:appendix:bias}
+
+Although bias correction does not play a role in our method, we show here an attempt at bias correction, though we will ultimately show in Appendix
+\ref{p1:appendix:wald:bias} that it does not improve coverage with the Wald confidence interval.
+
+Consider again (\ref{p1:eq:esteqn-naive}),
+\begin{equation}
+  Y - X\beta_c = \tau + X\beta_c\eta + e.
+\end{equation}
+
+The form of the estimate for \(\eta\) is not affected by the peculiarities of the PBPH method and thus the typical least squares parameter estimate
+suffices,
+\begin{equation}
+  \hat{\eta} = \frac{\cov(Y - X\hat{\beta}_c, X\hat{\beta}_c)}{\var(X\hat{\beta}_c)},
+  \label{p1:eq:calc-bias-etahat}
+\end{equation}
+which is estimating the population \(\eta\), defined by
+\begin{equation}
+  \eta = \frac{\cov(Y - X\beta_c, X\beta_c)}{\var(X\beta_c)}.
+\end{equation}
+
+Deriving the overall bias is quite difficult. Therefore we attempt only to minimize the bias. Specifically, we will bias correct the numerator and
+denominator of (\ref{p1:eq:calc-bias-etahat}) separately, which leaves \(\hat{\eta}\) biased (because the numerator and denominator are not
+independent), but reduces the overall bias.
+
+Assume for simplicity and without loss of generality that \(X\) is centered overall, which allows us to further assume that the treatment group means
+of \(X\) converges in probability to 0. Thus we can claim that for any \(\hat{\beta}\), \(\sum_k\sum_i X_{ki}\hat{\beta}_k = 0\). Therefore, simple
+calculation shows us that, in the treatment group, the sample covariance (the numerator of (\ref{p1:eq:calc-bias-etahat})) can be expressed as
+\begin{equation}
+  \frac{1}{n_t}\left(Y - X\hat{\beta}\right)'\left(X\hat{\beta}\right).
+  \label{p1:eq:calc-bias-num1}
+\end{equation}
+
+Since we are working solely in the treatment group, \(Y = Y_t\), and trivially \(Y = Y_t - Y_c + Y_c\), so that (\ref{p1:eq:calc-bias-num1}) becomes
+\begin{equation}
+  \frac{1}{n_t}\left[\underbrace{(Y_t - Y_c)'(X\hat{\beta})}_{(*)} + (Y_c - X\hat{\beta})'(X\hat{\beta})\right].
+\end{equation}
+
+When we eventually take expectations, \((*)\) will contribute \((Y_t - Y_c)'(X\beta)\) by linearity and thus will not directly introduce any
+bias. There may be additional complications to the variance or for central limit theorem approximations, but we relegate that to further study.
+
+Writing \(X\hat{\beta}\) as \(X(\beta - \beta + \hat{\beta}) = X\beta - X(\beta - \hat{\beta})\), we have that
+\begin{equation}
+  \begin{split}
+    (Y_c - X\Hat{\beta})'(X\hat{\beta}) &=\\
+    (Y_c - X\beta)'(&X\beta) + \underbrace{(\beta - \hat{\beta})'X'X\beta - (Y_c - X\beta)'X(\beta - \hat{\beta})}_{(**)} - (\beta -
+    \hat{\beta})'X'X(\beta - \hat{\beta}).
+  \label{p1:eq:calc-bias-num2}
+\end{split}
+\end{equation}
+
+Again when we take expectations, \((**)\) will vanish since it is linear in \((\beta - \hat{\beta})\) and \(\E(\beta - \hat{\beta}) = 0\). Therefore,
+taking expectations of both sides, we have
+\begin{equation}
+  \frac{1}{n_t}\E\left((Y_c - X\hat{\beta})'(X\hat{\beta})\right) =
+  \frac{1}{n_t}(Y_c - X\beta)'(X\beta) - \frac{1}{n_t}\E\left[(\beta -
+  \hat{\beta})'X'X(\beta - \hat{\beta})\right].
+\end{equation}
+
+Thus, as an estimate for the covariance between \(Y - X\beta\) and \(X\beta\), the treatment-group covariance between \(Y - X\hat{\beta}\) and
+\(X\hat{\beta}\) is negatively biased with magnitude
+\begin{equation}
+  \E\left[(\beta - \hat{\beta})'\Sigma_X(\beta - \hat{\beta})\right]
+\end{equation}
+(where \(\Sigma_X = \frac{X'X}{N_t}\) is the empirical covariance of the baseline covariates amongst the treatment group members), which is nothing
+more than the sum over \(i,j\) of all element-wise products of \(\cov(\beta - \hat{\beta})\) and \(\Sigma_X\) from the treatment group. If we have an
+unbiased estimate of this, we will have an unbiased estimate of the magnitude of the bias.
+
+Consider the denominator, which is the sample variance of \(X\hat{\beta}\), with the centering assumptions above, can be written as
+\begin{equation}
+  \frac{1}{n_t}\left(X\hat{\beta}\right)'\left(X\hat{\beta}\right).
+\end{equation}
+
+Following the derivation of (\ref{p1:eq:calc-bias-num2}), we expand and drop terms which will vanish in expectation, leaving
+\begin{equation}
+  (X\hat{\beta})'(X\hat{\beta}) = (X\beta)'(X\beta)  - (\beta - \hat{\beta})'X'X(\beta - \hat{\beta}),
+\end{equation}
+so that
+\begin{equation}
+  \frac{1}{n_t}\E\left((X\hat{\beta})'(X\hat{\beta})\right) = \frac{1}{n_t}(X\beta)'(X\beta) - \frac{1}{n_t}\E\left[(\beta - \hat{\beta})'X'X(\beta -
+    \hat{\beta})\right].
+\end{equation}
+
+We are left with the same bias as in the numerator, yielding
+\begin{equation}
+  \hat{\eta}^* = \frac{\cov(Y - X\hat{\beta}_c, X\hat{\beta}_c) + \hat{\E}\left[(\beta - \hat{\beta})'\Sigma_X(\beta -
+      \hat{\beta})\right]}{\var(X\hat{\beta}_c) + \hat{\E}\left[(\beta - \hat{\beta})'\Sigma_X(\beta - \hat{\beta})\right]},
+\end{equation}
+as an estimator for \(\eta\) with less bias than \(\hat{\eta}\), that is, \(\E(\hat{\eta} - \eta) > \E(\hat{\eta}^* - \eta)\).
+
+It would be convenient to be able to express the bias as a linear correction to \(\hat{\eta}\). While in general there is no way to rewrite
+\(\hat{\eta}^*\) as linear in \(\hat{\eta}\), we can approximate it with a first order Taylor expansion, so that we have
+\begin{equation}
+  \hat{\eta}^* \approx \hat{\eta} - \frac{\hat{\eta} - 1}{\var(X\hat{\beta}_c)}\hat{\E}\left[(\beta - \hat{\beta})'\Sigma_X(\beta -
+    \hat{\beta})\right].
+\end{equation}
+
+When combined with the standard error correction, we ultimately have a method for obtaining an estimator for \(\eta\) which provides good coverage in
+the confidence interval setting.
+
+\subsection{A Simplifying Example}
+\label{p1:appendix:bias:simplify}
+
+To consider a concrete example, let's consider \(\hat{\beta}\) to come from a linear regression model between \(Y\) and \(X\) where
+\(X \in \R_{n\times p}\).  For notation, let \(\Sigma_{X_t}\) and \(\Sigma_{X_c}\) to be the empirical covariances of baseline covariates amongst
+treatment and control group members respectively. Then, we can simplify,
+\begin{equation}
+  \cov(\beta - \hat{\beta}) = \cov(\hat{\beta}) = \sigma^2(X'X)^{-1} = \sigma^2\frac{\Sigma_{X_c}^{-1}}{n_c - 1}.
+\end{equation}
+
+To simplify notation (although likely not calculation), note that the element-wise product of two matrices is equivalent to the trace of their
+product. Assume \(\hat{\sigma}^2\) is any unbiased estimator for \(\sigma^2\), we therefore have that the bias existing in both the numerator and
+denominator can be expressed as
+\begin{equation}
+  \E(\beta - \hat{\beta})\Sigma_{X_t}(\beta - \hat{\beta}) = \hat{\sigma}^2\frac{\textrm{tr}(\Sigma_{X_c}^{-1}\Sigma_{X_t})}{n_c - 1}.
+\end{equation}
+
+Notice that this goes to 0 as \(n_c \to \infty\) (provided of course that if \(p \to \infty\), it does at a slower rate that \(n_c\) - not an
+unreasonable assumption in practice). Further, consider the trace term. If \(\Sigma_{X_t}\) is generally ``larger'' than \(\Sigma_{X_c}\) (rather than
+define ``larger'', just consider it in the hand-wavy sense of to have more extreme empirical covariances), then for a fixed \(\sigma^2\), the bias
+will be higher, and when \(\Sigma_{X_t}\) is generally ``smaller'' than \(\Sigma_{X_c}\), the bias will be lower. This follows intuition, namely that
+the bias grows as the treatment group becomes the dominant source of the sampling variability. We have less concern if the treatment group has lower
+sampling variability.
+
+\section{Failure of Wald-Style Confidence Intervals}
+\label{p1:appendix:wald}
+
+We justify our claim that a Wald-style confidence interval is insufficient.
+
+Generate a data set of size \(n=100\) using (\ref{p1:eq:stage1}) and (\ref{p1:eq:fullmodel2}), for some value of \(\eta \in (-1, 2)\). Perform the
+analysis using both uncorrected and corrected versions of the standard error, and check coverage of a Wald-type confidence interval using each
+version. (Note that a Wald-type uses the fully empirical estimator of the covariance, (\ref{p1:eq:est-meth-test-empirical}), as described in Section
+\ref{p1:methodology:test}.)  Repeat this 1,000 times for each choice of \(\eta\), then repeat the entire procedure with \(n\) = 1,000 to check for
+sample size considerations. The resulting coverage percentages are plotted in Figure \ref{p1:fig:naive_se_coverage}.
+
+<<echo=FALSE, fig.cap="Simulation results comparing coverage of confidence intervals built with the uncorrected and corrected standard error estimates, using samples sizes $n$ = 100 and $n$ = 1000.\\label{p1:fig:naive_se_coverage}", fig.scap="Appendix: Wald with and without standard error correction">>=
+source("code/biassim.R")
+
+
+b100  <- biassim[[1]]
+b1000 <- biassim[[2]]
+
+par(mfrow=c(2,1), oma=c(2,0,0,0), mar=c(4.1, 4.1, 1, 1))
+plot(b100$coverage[b100$time == "none"] ~ b100$true[b100$time == "none"], type ='l', ylim = c(.7, 1),
+     xlab = expression(eta), ylab = "C.I. coverage")
+lines(b100$coverage[b100$time == "se"] ~ b100$true[b100$time == "se"], col='red')
+mtext("n = 100", side = 3, at = -.75)
+abline(h = .95, lty = 2, col = 'lightgrey')
+
+plot(b1000$coverage[b1000$time == "none"] ~ b1000$true[b1000$time == "none"], type ='l', ylim = c(.7, 1),
+     xlab = expression(eta), ylab = "C.I. coverage")
+lines(b1000$coverage[b1000$time == "se"] ~ b1000$true[b1000$time == "se"], col='red')
+mtext("n = 1,000", side = 3, at = -.75)
+abline(h = .95, lty = 2, col = 'lightgrey')
+
+par(fig = c(0, 1, 0, 1), oma = c(0, 0, 0, 0), mar = c(0, 0, 0, 0), new = TRUE)
+plot(0, 0, type = "n", bty = "n", xaxt = "n", yaxt = "n")
+legend("bottomleft", c("Uncorrected", "S.E. Correction"),
+       xpd = TRUE,
+       horiz = TRUE, inset = c(0, 0), bty = "n", lty = c(1,1),
+       col = c("black", "red"),
+       text.width = c(0, 0.3))
+@
+
+The corrected standard error outperforms the uncorrected estimate, however coverage is still lacking.
+
+\subsection{Adding in bias correction}
+\label{p1:appendix:wald:bias}
+
+Adding the bias correction above, we still do not see proper Wald coverage. Results using the same simulation settings as above, we obtain the
+coverage percentages plotted in Figure \ref{p1:fig:bias_coverage}.
+
+<<echo=FALSE, fig.cap="Simulation results comparing coverage of confidence intervals built with the corrected standard error estimates, with and without bias correction, at the different sample sizes.\\label{p1:fig:bias_coverage}", fig.scap="Appendix: Wald with and without bias correction">>=
+source("code/biassim.R")
+
+b100  <- biassim[[1]]
+b1000 <- biassim[[2]]
+
+par(mfrow=c(2,1), oma=c(2,0,0,0), mar=c(4.1, 4.1, 1, 1))
+plot(b100$coverage[b100$time == "none"] ~ b100$true[b100$time == "none"], type ='l', ylim = c(.7, 1),
+     xlab = expression(eta), ylab = "C.I. coverage")
+lines(b100$coverage[b100$time == "se"] ~ b100$true[b100$time == "se"], col='red')
+lines(b100$coverage[b100$time == "bias_se"] ~ b100$true[b100$time == "bias_se"], col='blue')
+mtext("n = 100", side = 3, at = -.75)
+abline(h = .95, lty = 2, col = 'lightgrey')
+
+plot(b1000$coverage[b1000$time == "none"] ~ b1000$true[b1000$time == "none"], type ='l', ylim = c(.7, 1),
+     xlab = expression(eta), ylab = "C.I. coverage")
+lines(b1000$coverage[b1000$time == "se"] ~ b1000$true[b1000$time == "se"], col='red')
+lines(b1000$coverage[b1000$time == "bias_se"] ~ b1000$true[b1000$time == "bias_se"], col='blue')
+mtext("n = 1,000", side = 3, at = -.75)
+abline(h = .95, lty = 2, col = 'lightgrey')
+
+par(fig = c(0, 1, 0, 1), oma = c(0, 0, 0, 0), mar = c(0, 0, 0, 0), new = TRUE)
+plot(0, 0, type = "n", bty = "n", xaxt = "n", yaxt = "n")
+legend("bottomleft", c("Uncorrected", "S.E. Correction", "S.E. & Bias Correction"),
+       xpd = TRUE,
+       horiz = TRUE, inset = c(0, 0), bty = "n", lty = c(1,1,1),
+       col = c("black", "red", "blue"),
+       text.width = c(0, 0.3, 0.34))
+
+@
+
+Once again, we have improved on the coverage over the standard error correction alone (barring the oddity of poor performance as \(\eta\) approaches
+\(-1\), which is likely due to the unique properties of \(\eta = -1\); see Section \ref{p1:calculations:problem:reasonable}) we still do not have
+acceptable coverage.

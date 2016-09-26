@@ -1,0 +1,28 @@
+When examining the treatment effect with a binary response, typically used models are general linear models with a logistic link function or
+conditional logistic regression. While there are several reasons to prefer these models over linear regression models \citep{cox1989analysis}, one side
+effect is that the treatment effect is forced to be linear on the logit scale. In other words, the treatment effect is multiplicative on the
+probability scale - the scale which usually has the easiest interpretation.
+
+We examine methods to test whether a treatment effect on a binary response is linear on the logit scale or linear on the probability scale. Rather
+than fitting a single linear model, which would additionally force all predictors to be linear on the probability scale, we use a two stage least
+squares procedure, where the first stage is logistic and the second is linear. The second stage contains only the effect of treatment, while the first
+contains all other predictors.
+
+We further show that by comparing the linear second stage vs a logistic second stage, choosing the model which minimize the expected risk function
+based upon logistic loss can help determine which linearity scale more closely captures the treatment effect.
+
+Another common feature of treatment effect analysis is stratification of the observations, for example through matching. In these settings,
+conditional logistic regression is a common approach (given the inconsistency of ordinary logistic regression with stratum fixed effects
+\citep{agresti2002categorical}). We first show how by fitting two slightly different two-stage logistic regression models, we can examine whether there
+is evidence that the treatment effect may be linear on the probability scale. If that evidence exists -- and in some cases even if it does not -- then
+a similar two-stage approach can be taken with a logistic first stage and a linear second stage. We ultimately recommend using weighting in the second
+stage to account for the strata as opposed to conditional logistic regression or fixed effects.
+
+Section \ref{p3:linearvslog} will examine the setting with no strata, examining the difference between the scales in detail in Section
+\ref{p3:linearvslog:scales} and choosing the model in Section \ref{p3:linearvslog:compare}. Section \ref{p3:simulations} shows simulation results.
+
+In Section \ref{p3:strata} we turn to the setting with strata, showing both using conditional logistic regression to gain evidence towards what scale
+the treatment effect is linear on in Section \ref{p3:strata:twoclr}, and the modifications to the two-stage procedure to account for the strata in
+Section \ref{p3:strata:weights}.
+
+Finally, we apply our results to \citet{gurm2013comparative} in Section \ref{p3:gurm}.

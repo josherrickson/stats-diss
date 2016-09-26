@@ -1,0 +1,10 @@
+When dealing a binary response and studying treatment effect, typical analysis methods will force the treatment effect to be linear on the logit
+scale, or multiplicative on the probability scale. Using two-stage regression models, we introduce methodology to enable fitting the treatment effect
+linearly on the probability scale, while the relationship between response and other predictors remains on the logit scale. We showed that using the
+estimated risk based on logistic loss can yield a decision criteria to determine upon which scale the treatment effect is linear.
+
+For stratified data, specifically matched sets, accounting for the stratification with binary response is typically handled with conditional logistic
+regression. We offer a two-stage alternative, which accounts for the strata via inverse probability weighting in the second stage. This two-stage
+approach enables an easier interpretation of interaction terms. Additionally, we gain the benefits discussed above, namely testing which scale the
+treatment effect is linear on. By using a sandwich approach to estimating the standard errors in the various second stage models, we open up the
+opportunity to expand the possible forms of both stage models.

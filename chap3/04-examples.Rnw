@@ -1,0 +1,74 @@
+Here we give several examples of implementation of the methodology. Each example uses a data set included in the \textbf{pbph} package.
+
+\subsection{PBPH with Linear First Stage}
+
+The \texttt{eottest} data contains student performance on an exam (``\texttt{test}''), the student's class (``\texttt{class}'', which will be used
+later in clustering), demographics (``\texttt{male}'', ``\texttt{gpa}''), and participation in an after school program (``\texttt{afterschool}''). We
+wish to see whether the after school program is effective, and whether it is more effective on those who are most likely to fail the test in the
+absence of any intervention.
+
+<<>>=
+data(eottest)
+mod1 <- lm(test ~ gpa + male, data = eottest,
+           subset = (afterschool == 0))
+@
+
+We fit the first stage model on only the control group, which is defined as a 0 in ``\texttt{afterschool}''. The first stage fits very well, which
+should always be a goal.
+
+Now, we fit the second stage model using \texttt{pbph}.
+
+<<>>=
+mod2 <- pbph(mod1, treatment = afterschool, data = eottest)
+summary(mod2)
+@
+
+The standard error and associated p-value are computed using the PBPH method. We can also obtain a confidence interval,
+
+<<>>=
+confint(mod2)
+confint(mod2, returnShape = TRUE)
+@
+
+\noindent and optionally return the shape of the confidence interval for reassurance.
+
+\subsection{PBPH with Logistic Data}
+
+Data \texttt{salesdata} can be used to test whether a new sales technique is effective in increasing sales. The data contains indicators of successful
+sales (``\texttt{sale}'') and whether the new technique was randomly chosen to be used (``\texttt{newtechnique}''), and some information about the
+salesperson (``\texttt{experience}'' and ``\texttt{previousales}'').
+
+Since the response in binary, the first stage model is a logistic regression model.
+
+<<>>=
+data(salesdata)
+mod1 <- glm(sale ~ experience + previoussales, data = salesdata,
+            subset = (newtechnique == 0), family = binomial)
+@
+
+Regardless, the second stage is fit the same
+
+<<>>=
+mod2 <- pbph(mod1, treatment = newtechnique, data = salesdata)
+summary(mod2)
+@
+
+The conclusion is that the new sales technique lowers the odds of a resultant sale, but that effect is strongest (most negative) on those most likely
+to have made the sale using the old technique. In other words, the new technique may assist poor performing or newer salespeople, but those with a
+proven track record are unlikely to be assisted.
+
+\subsection{Clustered Data}
+
+We return to the student test data. The data can be thought of a clustered random trial, where classrooms were assigned to the after school program
+instead of individual students. Very little modification is needed to enable this.
+
+<<>>=
+mod1 <- lm(test ~ gpa + male, data = eottest,
+           subset = (afterschool == 0))
+mod2 <- pbph(mod1, treatment = afterschool, data = eottest,
+             cluster = class)
+summary(mod2)
+confint(mod2)
+@
+
+Note that the estimate of the interaction coefficient does not change, but we properly compute the standard error.

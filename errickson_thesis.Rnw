@@ -1,0 +1,227 @@
+\documentclass[reqno,12pt,oneside]{report} % right-side equation numbering, 12 point font, print one-sided
+%\documentclass[reqno,12pt,twoside,openright]{report} % right-side equation numbering, 12 point font, print two-sided, Chapters start on odd pages. Rackham only accepts one-sided, so this is for personal printings.
+
+\usepackage{rac}         % Use Rackham thesis style file
+\usepackage[intlimits]{amsmath} % Puts the limits of integrals on top and bottom
+\usepackage{amsxtra}     % Use various AMS packages
+\usepackage{amsthm}
+\usepackage{amssymb}
+\usepackage{amsfonts}
+\usepackage{graphicx}    % Add some packages for figures. Read epslatex.pdf on ctan.tug.org
+\usepackage{subcaption}
+\captionsetup{compatibility=false}
+\usepackage{verbatim}
+\usepackage[numbers,longnamesfirst,sort&compress]{natbib}      % Allows you to use BibTeX
+\usepackage[printonlyused]{acronym} % For the List of Abbreviations. Read acronym.pdf on ctan.tug.org
+\usepackage{setspace}    % Allows you to specify the line spacing
+\doublespacing           % \onehalfspacing for 1.5 spacing, \doublespacing for 2.0 spacing.
+\usepackage[hidelinks]{hyperref}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+% Various theorem environments. All of the following have the same numbering
+% system as theorem.
+
+\theoremstyle{plain}
+\newtheorem{theorem}{Theorem}
+\newtheorem{prop}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{question}[theorem]{Question}
+\newtheorem{conjecture}[theorem]{Conjecture}
+\newtheorem{assumption}[theorem]{Assumption}
+
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{notation}[theorem]{Notation}
+\newtheorem{condition}[theorem]{Condition}
+\newtheorem{example}[theorem]{Example}
+\newtheorem{introduction}[theorem]{Introduction}
+
+\theoremstyle{remark}
+\newtheorem{remark}[theorem]{Remark}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\numberwithin{theorem}{chapter}     % Numbers theorems "x.y" where x
+                                    % is the section number, y is the
+                                    % theorem number
+
+\renewcommand{\thetheorem}{\arabic{chapter}.\arabic{theorem}}
+
+%\makeatletter                      % This sequence of commands will
+%\let\c@equation\c@theorem          % incorporate equation numbering
+%\makeatother                       % into the theorem numbering scheme
+
+%\renewcommand{\theenumi}{(\roman{enumi})}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% If printing two-sided, this makes sure that any blank page at the
+% end of a chapter will not have a page number.
+\makeatletter
+\def\cleardoublepage{\clearpage\if@twoside \ifodd\c@page\else
+\hbox{}
+\thispagestyle{empty}
+\newpage
+\if@twocolumn\hbox{}\newpage\fi\fi\fi}
+\makeatother
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%This command creates a box marked ``To Do'' around text.
+%To use type \todo{  insert text here  }.
+
+\newcommand{\todo}[1]{\vspace{5 mm}\par \noindent
+\marginpar{\textsc{To Do}}
+\framebox{\begin{minipage}[c]{0.95 \textwidth}
+\tt\begin{center} #1 \end{center}\end{minipage}}\vspace{5 mm}\par}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%% Macros %%
+\DeclareMathOperator{\cov}{Cov}
+\DeclareMathOperator{\var}{Var}
+\DeclareMathOperator{\logit}{logit}
+\DeclareMathOperator*{\argmax}{arg\,max}
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\p}{\mathbb{P}}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\Z}{\mathbb{Z}}
+\newcommand{\pderiv}[1]{\frac{\partial}{\partial#1}}
+\newcommand{\psecderiv}[1]{\frac{\partial^2}{\partial#1^2}}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{document}
+
+
+<<setup, echo = FALSE, warning = FALSE, message = FALSE>>=
+library(knitr)
+library(MASS)
+library(mosaic)
+library(foreign)
+library(devtools)
+library(xtable)
+library(SparseM)
+library(optmatch)
+# RItools requires a development version locally
+library(RItools)
+library(survival)
+load_all("~/repositories/r/pbph")
+
+hook_plot = knit_hooks$get('plot')
+knit_hooks$set(plot = function(x, options) {
+   # if x is foo.pdf, make it foo.pdf.whatever so the plot hook removes the extension internally
+  x = paste(c(x, 'whatever'), collapse = '.')
+  hook_plot(x, options)
+})
+
+opts_chunk$set(fig.align = "center")
+#$ Fixes a bug with ESS+Knitr where it thinks dollar signs in R code should be closed a la TeX.
+@
+
+% Title page as required by Rackham dissertation guidelines
+\titlepage{Two-stage Regression for Treatment Effect Estimation}{Joshua Kane Errickson}{Doctor of Philosophy}
+{Statistics} {2016}
+{ Associate Professor Ben B. Hansen, Chair \\
+  Professor Robert W. Keener\\
+  Professor Edward D. Rothman\\
+  Professor Brian P. Rowan }
+
+
+% Begin the front matter as required by Rackham dissertation guidelines
+\initializefrontsections
+
+% Optional Frontispiece
+%\frontispiece{\includegraphics[width=6in]{Intro/Happy} Find a cool picture to go here.}
+
+% Optional, but recommended, Copyright page
+%\copyrightpage{Your Name}
+
+% Page numbering. If you don't include a frontispiece or copyright page, you'll need to change this for two-sided printing.
+\makeatletter
+\if@twoside \setcounter{page}{4} \else \setcounter{page}{1} \fi
+\makeatother
+
+% Optional Dedication page
+\dedicationpage{\small {\it for Nora and the little cupcake}}
+
+% Optional Acknowledgements page
+\startacknowledgementspage
+\input{acknowledgements}
+\label{Acknowledgements}
+
+% Optional Preface page
+%\startprefacepage
+%\input{Preface}
+%\label{Preface}
+
+% The 'longnamesfirst' flag when loading natbib is equivalent to using \citet* in each first citation, and \citet afterwards.
+% To override this for a specific cite, put below.
+\shortcites{gine2012credit} % First citation of this is technically in TOC, so we use * manually instead.
+
+% Table of contents, list of figures, etc.
+\tableofcontents     % Required
+\listoffigures       % Required if there is more than one figure
+\listoftables        % Required if there is more than one table
+%\listofmaps          % Required if there is more than one map
+\listofappendices    % Required if there is more than one appendix
+%\listofabbreviations % Optional. Abbreviations should be stored in a file named abbr.tex, as \acro{USA}{United States of America}
+
+% Optional in-dissertation Abstract Page
+% \startabstractpage
+% {Title}{Your Name}{Chair: Chair Name}
+% \input{Abstract/Abstract}
+% \label{Abstract}
+
+\startthechapters
+% The individual files for each of the chapters are put here.
+% Save each chapter of your thesis to a seperate tex file
+% and then use the \input command to include this file in your
+% thesis.  For instance you can save a file to "intro.tex" and
+% then type \input{intro}.
+\chapter{Introduction}
+\label{intro}
+<<child='chap1.Rnw'>>=
+@
+
+\chapter{Peters-Belson with Prognostic Heterogeneity in Treatment Effect}
+\label{chap2}
+<<child='chap2.Rnw'>>=
+@
+
+\chapter{Further Applications of the Peters-Belson with Prognostic Heterogeneity Method}
+\label{chap3}
+<<child='chap3.Rnw'>>=
+@
+
+\chapter{Enabling Linear Treatment Effects with a Binary Response}
+\label{chap4}
+<<child='chap4.Rnw'>>=
+@
+
+\startappendices
+
+\appendix{Appendix for Chapter \ref{chap2}}
+\label{appendix_chap2}
+<<child='chap2/99-appendix/appendix.Rnw'>>=
+@
+
+\appendix{Appendix for Chapter \ref{chap3}}
+\label{appendix_chap3}
+<<child='chap3/99-appendix/appendix.Rnw'>>=
+@
+
+\appendix{Appendix for Chapter \ref{chap4}}
+\label{appendix_chap4}
+<<child='chap4/99-appendix/appendix.Rnw'>>=
+@
+
+
+\bibliographystyle{plainnat}    % Set the bibliography style. agu04, plain, alpha, etc.
+\startbibliography
+\begin{singlespace} % Bibliography must be single spaced
+  \bibliography{\detokenize{~/repositories/bib_files/petersbelson,~/repositories/bib_files/r,~/repositories/bib_files/twostageett}}
+\end{singlespace}
+
+\end{document}

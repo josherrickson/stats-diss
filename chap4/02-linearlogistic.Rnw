@@ -1,0 +1,163 @@
+\subsection{Logistic Regression}
+\label{p3:linearvslog:log}
+
+In general, there are numerous valid reasons to prefer a logistic regression model over a linear model when \(Y\) is binary. For example, in linear
+regression, the restriction that \(\hat{Y} \in [0,1]\) is not enforced, extrapolation is more hazardous than usual, and we know the response
+distribution is non-normal so the residuals will be incorrectly modeled. These restrictions are discussed in length in numerous sources, for example
+\citet{agresti2002categorical} or \citet{cox1989analysis}.
+
+Logistic regression models address these concerns and enable a more robust analysis of the data. It is important to note that the methods we are
+proposing are not a framework for considering a logistic vs linear model in a general setting; rather we are restricting ourselves to the setting
+where the predictor of interest is \(Z\), the treatment indicator. There can be other predictors \(X\), but they must be modeled in a first stage to
+that the relationship between \(Y\) and \(X\) remains firmly in the logistic framework.
+
+A second benefit of the two-stage approach is separating the tasks of modeling the relationship between the response and its predictors from the task
+of modeling the treatment effect. A one-stage model which includes both \(X\) and \(Z\) must address both issues simultaneously.
+
+\subsection{Loss and Risk Functions}
+\label{p3:linearvslog:loss}
+
+Regression can be thought of as a process to find a function \(f(X)\) which minimizes some risk function for the prediction error from predicting
+\(Y\) with \(\hat{Y} = f(X)\). For example, in linear regression, \(f(X) = X\beta\). The risk function is the expected value of a loss function, which
+is any function \(L(Y, f(X))\) which has properties
+\begin{equation}
+  \begin{split}
+    &L(Y, Y) = 0,\\
+    &L(Y, f(X)) \geq 0.
+  \end{split}
+\end{equation}
+
+Our treatment of loss and risk is somewhat informal; more formal discussion appear in literature such as statistical decision theory (e.g.,
+\citet[Ch. 11]{keener2010theoretical}, \citet[Ch. 2, 7]{hastie2001elements}) and classification problems (e.g., \citet{bartlett2006convexity},
+\citet{freund1997using}).
+
+There are different choices for the loss function over which to optimize the choices of \(f(x)\). Linear regression is usually solved with the least
+squares method which uses the quadratic loss function,
+\begin{equation}
+  (Y_i - f(X_i))^2,
+  \label{p3:eq:quad}
+\end{equation}
+whose risk (expected loss) can be estimated by
+\begin{equation}
+  \frac{1}{n}\sum_i(Y_i - f(X_i))^2.
+  \label{p3:eq:quadrisk}
+\end{equation}
+
+It is possible to fit linear regression with other loss functions; another common example is least absolute difference, which can be more robust than
+least squares, but admits multiple solutions.\citep{keener2010theoretical,koenker2004quantile}
+
+For binary outcomes, there are many choices of loss functions motivated by classification problems such as 0/1 loss, hinge loss, or boosting
+loss.\citep{buja2005loss} Logistic regression performs by minimizing the logistic loss function,
+\begin{equation}
+  -Y_i\log(f(X_i)) - (1 - Y_i)\log(1 - f(X_i)),
+  \label{p3:eq:log}
+\end{equation}
+with a similarly defined estimated risk.
+
+In addition to minimizing these loss functions to fit the regression models, the loss functions can be used for model selection. Consider two
+competing regression model, the first with predictors \(X^{(1)}\) and the second with predictors \(X^{(2)}\). Then we choose the first model only if
+\begin{equation}
+  \sum_i(Y_i - X_i^{(1)}\hat{\beta}^{(1)})^2 < \sum_i(Y_i - X_i^{(2)}\hat{\beta}^{(2)})^2.
+\end{equation}
+
+However, if $Y$ is binary and we are comparing a linear and logistic model, the decision criterion is not as clear, as the loss function fitting each
+model is different. As we stated earlier, we are not offering a general solution. However, in the limited setting where our goal is to determine
+whether a treatment effect is linear on the logit scale or linear on the probability scale, we will present evidence from simulations that using the
+logistic loss function, (\ref{p3:eq:log}), is superior to the quadratic loss function in the sense that it more commonly chooses the model which is
+based upon the data-generating model.
+
+\subsection{Treatment on Probability or Logit Scale}
+\label{p3:linearvslog:scales}
+
+To see the difference of a treatment effect on the two scales, lets take a simple example. This toy example will be represented in a one-stage model
+for ease of understanding, while our method relies on the two-stage variation.
+
+Let there be binary response \(Y\), treatment indicator \(Z\) and some grouping variable \(G\) with two categories. Say the true conditional
+probabilities are
+\begin{align}
+  P(Y = 1 | Z = 0, G = 1) & = .05,\\
+  P(Y = 1 | Z = 0, G = 2) & = .50,\\
+  P(Y = 1 | Z = 1, G = 1) & = .15.
+\end{align}
+
+The remaining true conditional probability, \(P(Y = 1 | Z = 1, G = 2)\), will obviously have different values depending on the true model. If the true
+model is linear,
+\begin{equation}
+  P(Y | Z, G) = \alpha_11_{G = 1} + \alpha_21_{G = 2} + Z\tau,
+  \label{p3:eq:calc_scales_prob}
+\end{equation}
+then we have that
+\begin{equation}
+  \begin{split}
+    \tau = P(Y = 1 &| Z = 1, G = 1) - P(Y = 1 | Z = 0, G = 1) = \\
+    &P(Y = 1 | Z = 1, G = 2) - P(Y = 1 | Z = 0, G = 2).
+   \label{p3:eq:calc_prob_equality}
+ \end{split}
+\end{equation}
+
+In other words, the effect of the treatment on the probability scale is constant across the groups of \(G\). Therefore,
+\begin{equation}
+  P(Y = 1 | Z = 1, G = 2) = .60.
+\end{equation}
+
+On the other hand, if the true model is linear on the logit scale (i.e. a logistic regression model),
+\begin{equation}
+  \logit\left(P(Y \middle| Z, G)\right) = \alpha_11_{G = 1} + \alpha_21_{G = 2}+ Z\tau,
+  \label{p3:eq:calc_scales_logit}
+\end{equation}
+then (\ref{p3:eq:calc_prob_equality}) no longer holds as linearity of the treatment effect exists only on the logit scale. In this setting, the
+remaining conditional probability would be
+\begin{equation}
+  P(Y = 1 | Z = 1, G = 2) \approx .77.
+\end{equation}
+
+A visual representation of this is included in Figure \ref{p3:graph:calc_example}.
+
+<<echo=FALSE, fig.width=5, fig.height=5, fig.cap="A demonstration of a linear treatment effect on the probability and logit scales.\\label{p3:graph:calc_example}">>=
+plot(NULL, xlim = c(-.3, 1.3), ylim = c(0, 1), xlab="G", ylab = "P(Y = 1)", xaxt = "n")
+axis(1, at = c(0,1), labels = 1:2)
+points(c(0, 1), c(.05, .50))
+points(c(0, 1), c(.15, .60), pch = 2)
+points(c(0, 1), c(.15, .7702703), pch = 3)
+lines(c(0, 1), c(.05, .50), lty = 2, col = 'lightgrey')
+lines(c(0, 1), c(.15, .60), lty = 2, col = 'lightgrey')
+lines(c(0, 1), c(.15, .7702703), lty = 2, col = 'lightgrey')
+legend("topleft", legend=c("P(Y = 1|Z = 0)",
+                           "P(Y = 1|Z = 1), probability scale",
+                           "P(Y = 1|Z = 1), logit scale"),
+       pch=1:3)
+@
+
+\subsection{Model comparison}
+\label{p3:linearvslog:compare}
+
+In the simple set-up discussed in Section \ref{p3:linearvslog:scales} where the only additional predictor is binary, we can choose between
+(\ref{p3:eq:calc_scales_prob}) and (\ref{p3:eq:calc_scales_logit}) simply by comparing the slope defined by the observed responses to treatment versus
+the observed responses to controls. If there is a significant difference between them, that can be considered evidence that linear model on the
+probability scale, (\ref{p3:eq:calc_scales_prob}), is unlikely. However, if the predictors are of higher dimension, the analysis gets much more
+complex. We will address this comparison by minimizing an expected risk function.
+
+The use of risk functions in model selection is not novel, for example using the mean-squared error in cross-validation.\citep{picard1984cross} Let
+\(Y\) be the observed response that we are attempting to predict, and let \(\hat{Y} = f(X,Z)\) be some prediction obtained by a regression model. In
+our framework, this model can be logistic or linear; if it is linear, replace values of \(\hat{Y}\) outside of \([0,1]\) with the closer of
+\(\{0,1\}\), to mimic the general understanding of out-of-range predictions. We can estimate the overall risk by the average risk in the sample, for
+example using the quadratic loss function (\ref{p3:eq:quad}),
+\begin{equation}
+  \hat{R}_{\textrm{quad}}(Y, \hat{Y}) = \frac{1}{n}\sum_{i=1}^n (Y - \hat{Y})^2.
+  \label{p3:eq:risk_quad}
+\end{equation}
+
+This is known as the predictive risk.\citep{foster1994risk} Because we are restricting the response \(Y \in \{0, 1\}\), the quadratic loss simplifies
+to
+\begin{equation}
+  Y(1 - \hat{Y})^2 + (1 - Y)\hat{Y}^2.
+\end{equation}
+
+The risk using the logistic loss function, (\ref{p3:eq:log}), can be similarly defined as
+\begin{equation}
+  \hat{R}_{\textrm{log}}(Y, \hat{Y}) = \frac{1}{n}\sum_{i=1}^n \left(-Y\log(\hat{Y}) - (1 - Y)\log(1 - \hat{Y})\right).
+  \label{p3:eq:risk_logistic}
+\end{equation}
+
+As we show below in Section \ref{p3:simulations:results}, if we choose between a linear or logistic second stage model which minimizes
+\(\hat{R}_{\textrm{log}}(Y, \hat{Y})\), we can gain evidence as to on which scale the linearity of the treatment effect is more closely aligned.
