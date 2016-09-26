@@ -5,7 +5,8 @@ This is my dissertation written to be compiled via [knitr](in Knitr) for ease of
 While you could compile this in Rstudio, it is designed to be built with [make](https://www.gnu.org/software/make/).
 
 The idea is there is a main file (mine is errickson_thesis.Rnw) which houses the header stuff and brings in each chapter. Then each individual chapter
-is either a file (e.g. chap1.Rnw) or in a folder (e.g. /chap2/).
+is included as a file (e.g. chap1.Rnw). These files can either be full chapters, or further inclusions of sections. For convenience I put each larger
+chapter's sections into a folder, but that's not necessary.
 
 Edit the first line in Makefile with the name of your main file, then from the command line, the Makefile defines the following:
 
